@@ -1,24 +1,22 @@
-from rest_framework import viewsets, permissions, filters
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework import generics, permissions, filters, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
+from django.db.models import Count
 from datetime import timedelta
 
-from .models import Listing, Location, Favorite, Application
-from .serializers import (
-    ListingSerializer,
-    LocationSerializer,
-    FavoriteSerializer,
-    ApplicationSerializer,
-)
+from .models import Listing, Location, Application, ListingLike
+from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer
 from apps.users.models import User
 
 
-# ─── Права ─────────────────────────────────────────────────────
+# ─── Права ───────────────────────────────────────────────
 class IsRealtor(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'realtor'
+
 
 class IsAdminOrRealtor(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -27,17 +25,21 @@ class IsAdminOrRealtor(permissions.BasePermission):
         )
 
 
-# ─── Локации ───────────────────────────────────────────────────
-class LocationViewSet(viewsets.ReadOnlyModelViewSet):
+# ─── Локации ──────────────────────────────────────────────
+class LocationListView(generics.ListAPIView):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [permissions.AllowAny]
+    
+class LocationCreateView(generics.CreateAPIView):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-
-# ─── Объявления ────────────────────────────────────────────────
-class ListingViewSet(viewsets.ModelViewSet):
-    queryset = Listing.objects.all()
+# ─── Объявления ───────────────────────────────────────────
+class ListingListCreateView(generics.ListCreateAPIView):
     serializer_class = ListingSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = {
         'location__city': ['exact'],
@@ -48,68 +50,94 @@ class ListingViewSet(viewsets.ModelViewSet):
         'area': ['gte', 'lte'],
     }
     search_fields = ['title', 'description', 'address']
-    ordering_fields = ['price', 'created_at', 'area']
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'my_listings']:
-            return [permissions.IsAuthenticated(), IsRealtor()]
-        return [permissions.AllowAny()]
+    ordering_fields = ['price', 'created_at', 'area', 'likes_count']
 
     def get_queryset(self):
+        qs = Listing.objects.annotate(likes_count=Count('likes'))
         if self.request.user.is_authenticated and self.request.user.role == 'admin':
-            return Listing.objects.all()
-        return Listing.objects.filter(is_active=True)
+            return qs
+        return qs.filter(is_active=True)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def destroy(self, request, *args, **kwargs):
-        listing = self.get_object()
-        listing.is_active = False
-        listing.save()
-        return Response(status=204)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsRealtor])
-    def my_listings(self, request):
-        listings = Listing.objects.filter(owner=request.user)
-        serializer = self.get_serializer(listings, many=True)
-        return Response(serializer.data)
+class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Listing.objects.all()
+    serializer_class = ListingSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-
-# ─── Избранное ─────────────────────────────────────────────────
-class FavoriteViewSet(viewsets.ModelViewSet):
-    serializer_class = FavoriteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
     def get_queryset(self):
-        return Favorite.objects.filter(user=self.request.user)
+        return Listing.objects.annotate(likes_count=Count('likes'))
+
+
+class MyListingsView(generics.ListAPIView):
+    serializer_class = ListingSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRealtor]
+
+    def get_queryset(self):
+        return Listing.objects.filter(owner=self.request.user).annotate(likes_count=Count('likes'))
+
+
+class ListingLikeToggleView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, pk):
+        try:
+            listing = Listing.objects.get(pk=pk)
+        except Listing.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        ip = self.get_client_ip(request)
+        like, created = ListingLike.objects.get_or_create(listing=listing, ip_address=ip)
+
+        if not created:
+            like.delete()
+            liked = False
+        else:
+            liked = True
+
+        count = ListingLike.objects.filter(listing=listing).count()
+        return Response({'liked': liked, 'likes_count': count}, status=200)
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', '')
+
+
+# ─── Заявки ───────────────────────────────────────────────
+class ApplicationListCreateView(generics.ListCreateAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            if user.role in ['realtor', 'admin']:
+                return Application.objects.filter(listing__owner=user)
+            return Application.objects.filter(user=user)
+        return Application.objects.none()
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(user=user)
 
 
-# ─── Заявки ────────────────────────────────────────────────────
-class ApplicationViewSet(viewsets.ModelViewSet):
+class MyApplicationsView(generics.ListAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.role == 'realtor':
-            return Application.objects.filter(listing__owner=user)
-        return Application.objects.filter(user=user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    @action(detail=False, methods=['get'])
-    def my_applications(self, request):
-        apps = Application.objects.filter(user=request.user)
-        serializer = self.get_serializer(apps, many=True)
-        return Response(serializer.data)
+        return Application.objects.filter(user=self.request.user)
 
 
-# ─── Статистика администратора ─────────────────────────────────
+# ─── Статистика администратора ───────────────────────────
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
 def admin_stats(request):

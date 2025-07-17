@@ -1,26 +1,34 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer, UserRegistrationSerializer
+from .serializers import (
+    UserSerializer,
+    UserRegistrationSerializer,
+    ManagerCreationSerializer,
+)
 
 User = get_user_model()
 
 
-class UserViewSet(viewsets.ViewSet):
+class RegisterAdminView(generics.CreateAPIView):
+    """Регистрация администратора (разрешено всем)"""
+    queryset = User.objects.all()
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class CreateRealtorView(generics.CreateAPIView):
+    """Создание менеджера (реалтора), только для админов"""
+    queryset = User.objects.all()
+    serializer_class = ManagerCreationSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class MeView(APIView):
+    """Получение текущего пользователя"""
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
-    def me(self, request):
-        """Получить профиль текущего пользователя"""
+    def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
-
-    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
-    def register(self, request):
-        """Регистрация нового пользователя"""
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
