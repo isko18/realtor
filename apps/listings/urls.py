@@ -1,19 +1,26 @@
 from django.urls import path
-from rest_framework.routers import DefaultRouter
 from .views import (
-    ListingViewSet,
-    LocationViewSet,
-    FavoriteViewSet,
-    ApplicationViewSet,
-    admin_stats,  # 👈 импортируем функцию статистики
+    ListingListCreateView,
+    ListingRetrieveUpdateDestroyView,
+    MyListingsView,
+    ListingLikeToggleView,
+    LocationListView,
+    LocationCreateView,
+    ApplicationListCreateView,
+    MyApplicationsView,
+    admin_stats
 )
 
-router = DefaultRouter()
-router.register('listings', ListingViewSet, basename='listings')
-router.register('locations', LocationViewSet, basename='locations')
-router.register('favorites', FavoriteViewSet, basename='favorites')
-router.register('applications', ApplicationViewSet, basename='applications')
+urlpatterns = [
+    path('locations/list/', LocationListView.as_view()),
+    path('locations/create/', LocationCreateView.as_view()),
+    path('listings/', ListingListCreateView.as_view()),
+    path('listings/<int:pk>/', ListingRetrieveUpdateDestroyView.as_view()),
+    path('listings/<int:pk>/like/', ListingLikeToggleView.as_view()),
+    path('listings/my/', MyListingsView.as_view()),
 
-urlpatterns = router.urls + [
-    path('admin/stats/', admin_stats, name='admin-stats'),  # 👈 добавляем вручную
+    path('applications/', ApplicationListCreateView.as_view()),
+    path('applications/my/', MyApplicationsView.as_view()),
+
+    path('admin/stats/', admin_stats),
 ]

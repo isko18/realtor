@@ -5,6 +5,7 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import os
 
+
 # ───── Локация ─────
 class Location(models.Model):
     city = models.CharField("Город", max_length=100)
@@ -87,45 +88,21 @@ class ListingImage(models.Model):
         return f"Фото → {self.listing.title}"
 
 
-# ───── Избранное ─────
-class Favorite(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        verbose_name="Пользователь",
-        related_name="favorites"
-    )
-    listing = models.ForeignKey(
-        Listing,
-        on_delete=models.CASCADE,
-        verbose_name="Объявление",
-        related_name="favorited_by"
-    )
-    created_at = models.DateTimeField("Дата добавления", auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'listing')
-        verbose_name = "Избранное"
-        verbose_name_plural = "Избранные"
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.user.username} → {self.listing.title}"
-
-
 # ───── Заявка ─────
 class Application(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        verbose_name="Пользователь",
-        related_name="applications"
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="applications",
+        verbose_name="Пользователь"
     )
     listing = models.ForeignKey(
         Listing,
         on_delete=models.CASCADE,
-        verbose_name="Объявление",
-        related_name="applications"
+        related_name="applications",
+        verbose_name="Объявление"
     )
     message = models.TextField("Сообщение", blank=True)
     contact_phone = models.CharField("Телефон для связи", max_length=30)
@@ -137,4 +114,25 @@ class Application(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} → {self.listing.title}"
+        username = self.user.username if self.user else "Аноним"
+        return f"{username} → {self.listing.title}"
+
+
+# ───── Лайки (без авторизации) ─────
+class ListingLike(models.Model):
+    listing = models.ForeignKey(
+        Listing,
+        on_delete=models.CASCADE,
+        related_name='likes',
+        verbose_name="Объявление"
+    )
+    ip_address = models.GenericIPAddressField("IP-адрес")
+    created_at = models.DateTimeField("Дата лайка", auto_now_add=True)
+
+    class Meta:
+        unique_together = ('listing', 'ip_address')
+        verbose_name = "Лайк"
+        verbose_name_plural = "Лайки"
+
+    def __str__(self):
+        return f"{self.ip_address} ❤️ {self.listing.title}"
