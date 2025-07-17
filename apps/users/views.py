@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 class UserViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny,]
 
     @action(detail=False, methods=['get'])
     def me(self, request):
