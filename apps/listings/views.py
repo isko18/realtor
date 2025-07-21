@@ -4,10 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from django.db.models import Count
 from datetime import timedelta
 
-from .models import Listing, Location, Application, ListingLike
+from .models import Listing, Location, Application
 from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer
 from apps.users.models import User
 
@@ -36,6 +35,12 @@ class LocationCreateView(generics.CreateAPIView):
     serializer_class = LocationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+class LocationDeleteView(generics.DestroyAPIView):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 # ─── Объявления ───────────────────────────────────────────
 class ListingListCreateView(generics.ListCreateAPIView):
     serializer_class = ListingSerializer
@@ -53,10 +58,9 @@ class ListingListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['price', 'created_at', 'area', 'likes_count']
 
     def get_queryset(self):
-        qs = Listing.objects.annotate(likes_count=Count('likes'))
         if self.request.user.is_authenticated and self.request.user.role == 'admin':
-            return qs
-        return qs.filter(is_active=True)
+            return Listing.objects.all()
+        return Listing.objects.filter(is_active=True)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -71,19 +75,17 @@ class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         instance.is_active = False
         instance.save()
 
-    def get_queryset(self):
-        return Listing.objects.annotate(likes_count=Count('likes'))
-
 
 class MyListingsView(generics.ListAPIView):
     serializer_class = ListingSerializer
     permission_classes = [permissions.IsAuthenticated, IsRealtor]
 
     def get_queryset(self):
-        return Listing.objects.filter(owner=self.request.user).annotate(likes_count=Count('likes'))
+        return Listing.objects.filter(owner=self.request.user)
 
 
-class ListingLikeToggleView(APIView):
+# ─── Лайки ───────────────────────────────────────────────
+class ListingLikeView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, pk):
@@ -91,50 +93,65 @@ class ListingLikeToggleView(APIView):
             listing = Listing.objects.get(pk=pk)
         except Listing.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        listing.likes_count += 1
+        listing.save()
+        return Response({"likes_count": listing.likes_count}, status=status.HTTP_200_OK)
 
-        ip = self.get_client_ip(request)
-        like, created = ListingLike.objects.get_or_create(listing=listing, ip_address=ip)
-
-        if not created:
-            like.delete()
-            liked = False
-        else:
-            liked = True
-
-        count = ListingLike.objects.filter(listing=listing).count()
-        return Response({'liked': liked, 'likes_count': count}, status=200)
-
-    def get_client_ip(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', '')
+    def delete(self, request, pk):
+        try:
+            listing = Listing.objects.get(pk=pk)
+        except Listing.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        if listing.likes_count > 0:
+            listing.likes_count -= 1
+            listing.save()
+        return Response({"likes_count": listing.likes_count}, status=status.HTTP_200_OK)
 
 
 # ─── Заявки ───────────────────────────────────────────────
-class ApplicationListCreateView(generics.ListCreateAPIView):
+class ApplicationView(generics.GenericAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_authenticated:
-            if user.role in ['realtor', 'admin']:
-                return Application.objects.filter(listing__owner=user)
-            return Application.objects.filter(user=user)
-        return Application.objects.none()
+        return Application.objects.all()
 
-    def perform_create(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
-        serializer.save(user=user)
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class MyApplicationsView(generics.ListAPIView):
-    serializer_class = ApplicationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    def put(self, request, pk, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            instance = Application.objects.get(pk=pk)
+        except Application.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-    def get_queryset(self):
-        return Application.objects.filter(user=self.request.user)
+    def delete(self, request, pk, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            instance = Application.objects.get(pk=pk)
+        except Application.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ─── Статистика администратора ───────────────────────────
