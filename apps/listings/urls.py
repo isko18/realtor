@@ -3,24 +3,23 @@ from .views import (
     ListingListCreateView,
     ListingRetrieveUpdateDestroyView,
     MyListingsView,
-    ListingLikeToggleView,
+    ListingLikeView,
     LocationListView,
     LocationCreateView,
-    ApplicationListCreateView,
-    MyApplicationsView,
+    LocationDeleteView,
+    ApplicationView,
     admin_stats
 )
 
 urlpatterns = [
-    path('locations/list/', LocationListView.as_view()),
-    path('locations/create/', LocationCreateView.as_view()),
-    path('listings/', ListingListCreateView.as_view()),
-    path('listings/<int:pk>/', ListingRetrieveUpdateDestroyView.as_view()),
-    path('listings/<int:pk>/like/', ListingLikeToggleView.as_view()),
-    path('listings/my/', MyListingsView.as_view()),
-
-    path('applications/', ApplicationListCreateView.as_view()),
-    path('applications/my/', MyApplicationsView.as_view()),
-
-    path('admin/stats/', admin_stats),
+    path('locations/list/', LocationListView.as_view(), name='location-list'),
+    path('locations/create/', LocationCreateView.as_view(), name='location-create'),
+    path('locations/<int:pk>/delete/', LocationDeleteView.as_view(), name='location-delete'),
+    path('listings/', ListingListCreateView.as_view(), name='listing-list-create'),
+    path('listings/<int:pk>/', ListingRetrieveUpdateDestroyView.as_view(), name='listing-detail'),
+    path('listings/<int:pk>/like/', ListingLikeView.as_view(), name='listing-like'),
+    path('listings/my/', MyListingsView.as_view(), name='my-listings'),
+    path('applications/', ApplicationView.as_view(), name='application-list'),
+    path('applications/<int:pk>/', ApplicationView.as_view(), name='application-detail'),
+    path('admin/stats/', admin_stats, name='admin-stats'),
 ]

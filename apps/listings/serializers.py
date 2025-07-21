@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from .models import (
-    Location,
-    Listing,
-    ListingImage,
-    Application,
-    ListingLike
-)
+from .models import Location, Listing, ListingImage, Application
 
 
 # ───── Локация ─────
@@ -26,33 +20,43 @@ class ListingImageSerializer(serializers.ModelSerializer):
 class ListingSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     images = ListingImageSerializer(many=True, read_only=True)
-    likes_count = serializers.IntegerField(source='likes.count', read_only=True)
+    image_files = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
             'location', 'address', 'deal_type', 'is_active', 'created_at',
-            'images', 'likes_count'
+            'images', 'image_files', 'likes_count'
         ]
+
+    def create(self, validated_data):
+        image_files = validated_data.pop('image_files', [])
+        listing = Listing.objects.create(**validated_data)
+        for image_file in image_files:
+            ListingImage.objects.create(listing=listing, image=image_file)
+        return listing
+
+    def update(self, instance, validated_data):
+        image_files = validated_data.pop('image_files', [])
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        for image_file in image_files:
+            ListingImage.objects.create(listing=instance, image=image_file)
+        return instance
 
 
 # ───── Заявка ─────
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
-        fields = ['id', 'listing', 'message', 'contact_phone', 'created_at']
+        fields = ['id', 'name', 'contact_phone', 'message', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        user = request.user if request and request.user.is_authenticated else None
-        return Application.objects.create(user=user, **validated_data)
-
-
-# ───── Лайк (опциональный вывод) ─────
-class ListingLikeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ListingLike
-        fields = ['id', 'listing', 'ip_address', 'created_at']
-        read_only_fields = fields
+        return Application.objects.create(**validated_data)

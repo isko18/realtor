@@ -48,6 +48,7 @@ class Listing(models.Model):
     deal_type = models.CharField("Тип сделки", max_length=10, choices=DEAL_TYPE_CHOICES)
     is_active = models.BooleanField("Активно", default=True)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    likes_count = models.PositiveIntegerField("Количество лайков", default=0)
 
     class Meta:
         ordering = ['-created_at']
@@ -73,16 +74,20 @@ class ListingImage(models.Model):
         verbose_name_plural = "Фотографии квартиры"
 
     def save(self, *args, **kwargs):
-        if self.image and not self.image.name.lower().endswith('.webp'):
-            img = Image.open(self.image)
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-            output = BytesIO()
-            img.save(output, format='WEBP', quality=75)
-            output.seek(0)
-            webp_name = os.path.splitext(self.image.name)[0] + '.webp'
-            self.image = ContentFile(output.read(), name=webp_name)
-        super().save(*args, **kwargs)
+        try:
+            if self.image and not self.image.name.lower().endswith('.webp'):
+                img = Image.open(self.image)
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                output = BytesIO()
+                img.save(output, format='WEBP', quality=75)
+                output.seek(0)
+                webp_name = os.path.splitext(self.image.name)[0] + '.webp'
+                self.image = ContentFile(output.read(), name=webp_name)
+            super().save(*args, **kwargs)
+        except Exception as e:
+            print(f"Ошибка при сохранении изображения: {str(e)}")
+            raise
 
     def __str__(self):
         return f"Фото → {self.listing.title}"
@@ -90,22 +95,9 @@ class ListingImage(models.Model):
 
 # ───── Заявка ─────
 class Application(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="applications",
-        verbose_name="Пользователь"
-    )
-    listing = models.ForeignKey(
-        Listing,
-        on_delete=models.CASCADE,
-        related_name="applications",
-        verbose_name="Объявление"
-    )
-    message = models.TextField("Сообщение", blank=True)
+    name = models.CharField("Имя", max_length=100, default="Unknown") 
     contact_phone = models.CharField("Телефон для связи", max_length=30)
+    message = models.TextField("Сообщение", blank=True)
     created_at = models.DateTimeField("Дата заявки", auto_now_add=True)
 
     class Meta:
@@ -114,25 +106,4 @@ class Application(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        username = self.user.username if self.user else "Аноним"
-        return f"{username} → {self.listing.title}"
-
-
-# ───── Лайки (без авторизации) ─────
-class ListingLike(models.Model):
-    listing = models.ForeignKey(
-        Listing,
-        on_delete=models.CASCADE,
-        related_name='likes',
-        verbose_name="Объявление"
-    )
-    ip_address = models.GenericIPAddressField("IP-адрес")
-    created_at = models.DateTimeField("Дата лайка", auto_now_add=True)
-
-    class Meta:
-        unique_together = ('listing', 'ip_address')
-        verbose_name = "Лайк"
-        verbose_name_plural = "Лайки"
-
-    def __str__(self):
-        return f"{self.ip_address} ❤️ {self.listing.title}"
+        return f"Заявка: {self.name} ({self.contact_phone})"
