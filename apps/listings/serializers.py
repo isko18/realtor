@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Location, Listing, ListingImage, Application
-
+from .models import Location, Listing, ListingImage, Application, SingleImage
 
 # ───── Локация ─────
 class LocationSerializer(serializers.ModelSerializer):
@@ -8,13 +7,11 @@ class LocationSerializer(serializers.ModelSerializer):
         model = Location
         fields = ['id', 'city', 'district']
 
-
 # ───── Фото ─────
 class ListingImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListingImage
         fields = ['id', 'image']
-
 
 # ───── Объявление ─────
 class ListingSerializer(serializers.ModelSerializer):
@@ -50,7 +47,6 @@ class ListingSerializer(serializers.ModelSerializer):
             ListingImage.objects.create(listing=instance, image=image_file)
         return instance
 
-
 # ───── Заявка ─────
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,3 +56,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Application.objects.create(**validated_data)
+
+# ───── Одиночное изображение ─────
+class SingleImageSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField()
+
+    class Meta:
+        model = SingleImage
+        fields = ['id', 'image']
+        read_only_fields = ['id']

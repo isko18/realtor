@@ -8,6 +8,7 @@ from .views import (
     LocationCreateView,
     LocationDeleteView,
     ApplicationView,
+    ImageUploadView,
     admin_stats
 )
 
@@ -21,5 +22,8 @@ urlpatterns = [
     path('listings/my/', MyListingsView.as_view(), name='my-listings'),
     path('applications/', ApplicationView.as_view(), name='application-list'),
     path('applications/<int:pk>/', ApplicationView.as_view(), name='application-detail'),
+    path('images/', ImageUploadView.as_view(), name='image-upload-list'),
+    path('images/<int:pk>/', ImageUploadView.as_view(), name='image-upload-detail'),
     path('admin/stats/', admin_stats, name='admin-stats'),
 ]
+

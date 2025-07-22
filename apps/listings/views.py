@@ -6,23 +6,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import Listing, Location, Application
-from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer
+from .models import Listing, Location, Application, SingleImage
+from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer
 from apps.users.models import User
-
 
 # ─── Права ───────────────────────────────────────────────
 class IsRealtor(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'realtor'
 
-
 class IsAdminOrRealtor(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and (
             request.user.role in ['realtor', 'admin'] or request.user.is_staff
         )
-
 
 # ─── Локации ──────────────────────────────────────────────
 class LocationListView(generics.ListAPIView):
@@ -39,7 +36,6 @@ class LocationDeleteView(generics.DestroyAPIView):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [permissions.IsAuthenticated]
-
 
 # ─── Объявления ───────────────────────────────────────────
 class ListingListCreateView(generics.ListCreateAPIView):
@@ -65,7 +61,6 @@ class ListingListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
@@ -75,14 +70,12 @@ class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         instance.is_active = False
         instance.save()
 
-
 class MyListingsView(generics.ListAPIView):
     serializer_class = ListingSerializer
     permission_classes = [permissions.IsAuthenticated, IsRealtor]
 
     def get_queryset(self):
         return Listing.objects.filter(owner=self.request.user)
-
 
 # ─── Лайки ───────────────────────────────────────────────
 class ListingLikeView(APIView):
@@ -108,7 +101,6 @@ class ListingLikeView(APIView):
             listing.likes_count -= 1
             listing.save()
         return Response({"likes_count": listing.likes_count}, status=status.HTTP_200_OK)
-
 
 # ─── Заявки ───────────────────────────────────────────────
 class ApplicationView(generics.GenericAPIView):
@@ -153,6 +145,42 @@ class ApplicationView(generics.GenericAPIView):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+# ─── Одиночное изображение ───────
+class ImageUploadView(generics.GenericAPIView):
+    serializer_class = SingleImageSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        return SingleImage.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            instance = SingleImage.objects.get(pk=pk)
+        except SingleImage.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            instance = SingleImage.objects.get(pk=pk)
+        except SingleImage.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # ─── Статистика администратора ───────────────────────────
 @api_view(['GET'])

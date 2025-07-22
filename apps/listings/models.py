@@ -5,7 +5,6 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import os
 
-
 # ───── Локация ─────
 class Location(models.Model):
     city = models.CharField("Город", max_length=100)
@@ -18,7 +17,6 @@ class Location(models.Model):
 
     def __str__(self):
         return f"{self.city}, {self.district}"
-
 
 # ───── Объявление ─────
 class Listing(models.Model):
@@ -58,7 +56,6 @@ class Listing(models.Model):
     def __str__(self):
         return f"{self.title} ({self.get_deal_type_display()})"
 
-
 # ───── Фото ─────
 class ListingImage(models.Model):
     listing = models.ForeignKey(
@@ -75,16 +72,9 @@ class ListingImage(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            if self.image and not self.image.name.lower().endswith('.webp'):
-                img = Image.open(self.image)
-                if img.mode in ("RGBA", "P"):
-                    img = img.convert("RGB")
-                output = BytesIO()
-                img.save(output, format='WEBP', quality=75)
-                output.seek(0)
-                webp_name = os.path.splitext(self.image.name)[0] + '.webp'
-                self.image = ContentFile(output.read(), name=webp_name)
-            super().save(*args, **kwargs)
+            if self.image:
+                print(f"Сохранение изображения: {self.image.name}")
+                super().save(*args, **kwargs)
         except Exception as e:
             print(f"Ошибка при сохранении изображения: {str(e)}")
             raise
@@ -92,10 +82,9 @@ class ListingImage(models.Model):
     def __str__(self):
         return f"Фото → {self.listing.title}"
 
-
 # ───── Заявка ─────
 class Application(models.Model):
-    name = models.CharField("Имя", max_length=100, default="Unknown") 
+    name = models.CharField("Имя", max_length=100, default="Unknown")
     contact_phone = models.CharField("Телефон для связи", max_length=30)
     message = models.TextField("Сообщение", blank=True)
     created_at = models.DateTimeField("Дата заявки", auto_now_add=True)
@@ -107,3 +96,14 @@ class Application(models.Model):
 
     def __str__(self):
         return f"Заявка: {self.name} ({self.contact_phone})"
+
+# ───── Одиночное изображение ─────
+class SingleImage(models.Model):
+    image = models.ImageField("Изображение", upload_to='single_images/')
+
+    class Meta:
+        verbose_name = "Одиночное изображение"
+        verbose_name_plural = "Одиночные изображения"
+
+    def __str__(self):
+        return f"Изображение ID: {self.id}"
