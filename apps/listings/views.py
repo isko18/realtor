@@ -61,6 +61,23 @@ class ListingListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def put(self, request, *args, **kwargs):
+        data = request.data
+        if not isinstance(data, list):
+            return Response({"detail": "Ожидается список объектов"}, status=status.HTTP_400_BAD_REQUEST)
+        updated_count = 0
+        for item in data:
+            try:
+                instance = Listing.objects.get(pk=item.get('id'))
+                serializer = self.get_serializer(instance, data=item, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                updated_count += 1
+            except Listing.DoesNotExist:
+                continue
+        return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
+
+
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
@@ -116,8 +133,6 @@ class ApplicationView(generics.GenericAPIView):
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -144,6 +159,17 @@ class ApplicationView(generics.GenericAPIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class ApplicationSubmitView(generics.CreateAPIView):
+    queryset = Application.objects.all()
+    serializer_class = ApplicationSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # ─── Одиночное изображение ───────
 class ImageUploadView(generics.GenericAPIView):
