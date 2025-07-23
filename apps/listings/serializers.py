@@ -16,6 +16,11 @@ class ListingImageSerializer(serializers.ModelSerializer):
 # ───── Объявление ─────
 class ListingSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
+    location_id = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(),
+        write_only=True,
+        source='location'
+    )
     images = ListingImageSerializer(many=True, read_only=True)
     image_files = serializers.ListField(
         child=serializers.ImageField(),
@@ -27,7 +32,8 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
-            'location', 'address', 'deal_type', 'is_active', 'created_at',
+            'location', 'location_id',  # ← это важно
+            'address', 'deal_type', 'is_active', 'created_at',
             'images', 'image_files', 'likes_count'
         ]
 
@@ -47,24 +53,6 @@ class ListingSerializer(serializers.ModelSerializer):
             ListingImage.objects.create(listing=instance, image=image_file)
         return instance
 
-# ───── Заявка ─────
-class ApplicationSerializer(serializers.ModelSerializer):
-    listing = serializers.PrimaryKeyRelatedField(queryset=Listing.objects.all(), required=True)
-    image = serializers.ImageField(required=False, allow_empty_file=True)
-
-    class Meta:
-        model = Application
-        fields = ['id', 'name', 'contact_phone', 'message', 'listing', 'image', 'created_at']
-        read_only_fields = ['id', 'created_at']
-
-    def create(self, validated_data):
-        image_file = validated_data.pop('image', None)
-        application = Application.objects.create(**validated_data)
-        if image_file:
-            single_image = SingleImage.objects.create(image=image_file)
-            application.image = single_image
-            application.save()
-        return application
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
@@ -73,3 +61,25 @@ class SingleImageSerializer(serializers.ModelSerializer):
         model = SingleImage
         fields = ['id', 'image']
         read_only_fields = ['id']
+
+
+# ───── Заявка ─────
+class ApplicationSerializer(serializers.ModelSerializer):
+    listing = serializers.PrimaryKeyRelatedField(queryset=Listing.objects.all(), required=True)
+    image_file = serializers.ImageField(write_only=True, required=False)
+    image = SingleImageSerializer(read_only=True)
+
+    class Meta:
+        model = Application
+        fields = ['id', 'name', 'contact_phone', 'message', 'listing', 'image_file', 'image', 'created_at']
+        read_only_fields = ['id', 'created_at', 'image']
+
+    def create(self, validated_data):
+        image_file = validated_data.pop('image_file', None)
+        application = Application.objects.create(**validated_data)
+        if image_file:
+            single_image = SingleImage.objects.create(image=image_file)
+            application.image = single_image
+            application.save()
+        return application
+
