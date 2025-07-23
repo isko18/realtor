@@ -49,14 +49,22 @@ class ListingSerializer(serializers.ModelSerializer):
 
 # ───── Заявка ─────
 class ApplicationSerializer(serializers.ModelSerializer):
+    listing = serializers.PrimaryKeyRelatedField(queryset=Listing.objects.all(), required=True)
+    image = serializers.ImageField(required=False, allow_empty_file=True)
+
     class Meta:
         model = Application
-        fields = ['id', 'name', 'contact_phone', 'message', 'created_at']
+        fields = ['id', 'name', 'contact_phone', 'message', 'listing', 'image', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def create(self, validated_data):
-        return Application.objects.create(**validated_data)
-
+        image_file = validated_data.pop('image', None)
+        application = Application.objects.create(**validated_data)
+        if image_file:
+            single_image = SingleImage.objects.create(image=image_file)
+            application.image = single_image
+            application.save()
+        return application
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
