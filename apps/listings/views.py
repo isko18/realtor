@@ -5,9 +5,24 @@ from rest_framework.decorators import api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework.permissions import AllowAny
 
-from .models import Listing, Location, Application, SingleImage
-from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer
+
+from .models import Listing, Location, Application, SingleImage, TextMessage, ListingImage
+from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer
+from apps.users.models import User
+
+from rest_framework import generics, permissions, filters, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
+from django_filters.rest_framework import DjangoFilterBackend
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from .models import Listing, Location, Application, SingleImage, TextMessage
+from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer
 from apps.users.models import User
 
 # ─── Права ───────────────────────────────────────────────
@@ -40,7 +55,7 @@ class LocationDeleteView(generics.DestroyAPIView):
 # ─── Объявления ───────────────────────────────────────────
 class ListingListCreateView(generics.ListCreateAPIView):
     serializer_class = ListingSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated, IsRealtor]  
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = {
         'location__city': ['exact'],
@@ -62,6 +77,8 @@ class ListingListCreateView(generics.ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
     def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.role != 'realtor':
+            return Response({"detail": "Только риелторы могут обновлять объявления."}, status=status.HTTP_403_FORBIDDEN)
         data = request.data
         if not isinstance(data, list):
             return Response({"detail": "Ожидается список объектов"}, status=status.HTTP_400_BAD_REQUEST)
@@ -71,13 +88,45 @@ class ListingListCreateView(generics.ListCreateAPIView):
                 instance = Listing.objects.get(pk=item.get('id'))
                 serializer = self.get_serializer(instance, data=item, partial=True)
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                image_files = item.get('image_files', [])
+                if not isinstance(image_files, list):
+                    image_files = [image_files] if image_files else []
+                video_file = item.get('video_file', None)
+                if image_files or video_file:
+                    validated_data = serializer.validated_data
+                    validated_data.pop('image_files', [])
+                    validated_data.pop('video_file', None)
+                    serializer.save()
+                    for image_file in image_files:
+                        if image_file:
+                            ListingImage.objects.create(listing=instance, image=image_file)
+                    if video_file:
+                        instance.video = video_file
+                        instance.save()
+                else:
+                    serializer.save()
                 updated_count += 1
             except Listing.DoesNotExist:
                 continue
         return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
 
+class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Listing.objects.all()
+    serializer_class = ListingSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+
+class MyListingsView(generics.ListAPIView):
+    serializer_class = ListingSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRealtor]
+
+    def get_queryset(self):
+        return Listing.objects.filter(owner=self.request.user)
+
+# (Остальные представления остаются без изменений)
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Listing.objects.all()
     serializer_class = ListingSerializer
@@ -227,3 +276,12 @@ def admin_stats(request):
         'applications_last_7_days': Application.objects.filter(created_at__gte=week_ago).count()
     }
     return Response(data)
+
+
+class TextMessageView(generics.ListAPIView):
+    queryset = TextMessage.objects.all()
+    serializer_class = TextMessageSerializer
+    permission_classes = [AllowAny]
+    
+
+

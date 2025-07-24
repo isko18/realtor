@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Location, Listing, ListingImage, Application, SingleImage
+from .models import Location, Listing, ListingImage, Application, SingleImage, TextMessage
+
+from rest_framework import serializers
+from .models import Location, Listing, ListingImage, Application, SingleImage, TextMessage
 
 # ───── Локация ─────
 class LocationSerializer(serializers.ModelSerializer):
@@ -23,36 +26,46 @@ class ListingSerializer(serializers.ModelSerializer):
     )
     images = ListingImageSerializer(many=True, read_only=True)
     image_files = serializers.ListField(
-        child=serializers.ImageField(),
+        child=serializers.ImageField(allow_empty_file=True),
         write_only=True,
         required=False
     )
+    video_file = serializers.FileField(write_only=True, required=False)
 
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
-            'location', 'location_id',  # ← это важно
+            'location', 'location_id',
             'address', 'deal_type', 'is_active', 'created_at',
-            'images', 'image_files', 'likes_count'
+            'images', 'image_files', 'likes_count', 'video', 'video_file'  
         ]
 
     def create(self, validated_data):
         image_files = validated_data.pop('image_files', [])
+        video_file = validated_data.pop('video_file', None)
         listing = Listing.objects.create(**validated_data)
         for image_file in image_files:
-            ListingImage.objects.create(listing=listing, image=image_file)
+            if image_file:
+                ListingImage.objects.create(listing=listing, image=image_file)
+        if video_file:
+            listing.video = video_file
+            listing.save()
         return listing
 
     def update(self, instance, validated_data):
         image_files = validated_data.pop('image_files', [])
+        video_file = validated_data.pop('video_file', None)
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.save()
         for image_file in image_files:
-            ListingImage.objects.create(listing=instance, image=image_file)
+            if image_file:
+                ListingImage.objects.create(listing=instance, image=image_file)
+        if video_file:
+            instance.video = video_file
+            instance.save()
         return instance
-
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
@@ -83,3 +96,8 @@ class ApplicationSerializer(serializers.ModelSerializer):
             application.save()
         return application
 
+
+class TextMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TextMessage
+        fields = ['id', 'text']
