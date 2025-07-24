@@ -10,7 +10,8 @@ from .views import (
     ApplicationView,
     ImageUploadView,
     admin_stats,
-    ApplicationSubmitView  
+    ApplicationSubmitView, 
+    TextMessageView
 )
 
 urlpatterns = [
@@ -27,4 +28,5 @@ urlpatterns = [
     path('images/<int:pk>/', ImageUploadView.as_view(), name='image-upload-detail'),
     path('admin/stats/', admin_stats, name='admin-stats'),
     path('listings/applications/submit/', ApplicationSubmitView.as_view(), name='application-submit'), 
+    path('text-message/', TextMessageView.as_view(), name='text-message'),
 ]

@@ -47,6 +47,7 @@ class Listing(models.Model):
     is_active = models.BooleanField("Активно", default=True)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     likes_count = models.PositiveIntegerField("Количество лайков", default=0)
+    video = models.FileField("Видео", upload_to='listing_videos/', null=True, blank=True)  # Новое поле для видео
 
     class Meta:
         ordering = ['-created_at']
@@ -82,6 +83,7 @@ class ListingImage(models.Model):
     def __str__(self):
         return f"Фото → {self.listing.title}"
 
+# (Остальные модели остаются без изменений)
 # ───── Одиночное изображение ─────
 class SingleImage(models.Model):
     image = models.ImageField("Изображение", upload_to='single_images/')
@@ -109,3 +111,13 @@ class Application(models.Model):
 
     def __str__(self):
         return f"Заявка: {self.name} ({self.contact_phone})"
+    
+class TextMessage(models.Model):
+    text = models.TextField("Текст", max_length=500)
+
+    class Meta:
+        verbose_name = "Текстовое сообщение"
+        verbose_name_plural = "Текстовые сообщения"
+
+    def __str__(self):
+        return self.text
