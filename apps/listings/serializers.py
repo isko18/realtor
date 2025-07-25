@@ -100,24 +100,28 @@ class SingleImageSerializer(serializers.ModelSerializer):
 
 
 # ───── Заявка ─────
+
 class ApplicationSerializer(serializers.ModelSerializer):
     listing = serializers.PrimaryKeyRelatedField(queryset=Listing.objects.all(), required=True)
     image_file = serializers.ImageField(write_only=True, required=False)
-    image = SingleImageSerializer(read_only=True)
+    image = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Application
         fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'created_at', 'image_file']
         read_only_fields = ['id', 'created_at', 'image']
 
+    def get_image(self, obj):
+        return obj.image.image.url if obj.image else None
+
     def create(self, validated_data):
         image_file = validated_data.pop('image_file', None)
-        application = Application.objects.create(**validated_data)
+        app = Application.objects.create(**validated_data)
         if image_file:
-            single_image = SingleImage.objects.create(image=image_file)
-            application.image = single_image
-            application.save()
-        return application
+            img = SingleImage.objects.create(image=image_file)
+            app.image = img
+            app.save()
+        return app
 
 class SimpleApplicationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -129,6 +133,7 @@ class ApplicationPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = ['name', 'contact_phone', 'listing', 'image']
+
 
 
 class TextMessageSerializer(serializers.ModelSerializer):

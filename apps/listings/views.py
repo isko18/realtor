@@ -132,6 +132,7 @@ class ListingLikeView(APIView):
         return Response({"likes_count": listing.likes_count}, status=status.HTTP_200_OK)
 
 # ─── Заявки ───────────────────────────────────────────────
+
 class ApplicationView(generics.GenericAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
@@ -141,7 +142,7 @@ class ApplicationView(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = ApplicationPublicSerializer(queryset, many=True)  
+        serializer = ApplicationPublicSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def put(self, request, pk, *args, **kwargs):
@@ -171,22 +172,10 @@ class ApplicationSubmitView(generics.CreateAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 class SimpleApplicationSubmitView(generics.CreateAPIView):
     queryset = Application.objects.all()
     serializer_class = SimpleApplicationSerializer
     permission_classes = [permissions.AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 # ─── Одиночное изображение ───────
