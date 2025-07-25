@@ -66,6 +66,9 @@ class ListingSerializer(serializers.ModelSerializer):
             instance.video = video_file
             instance.save()
         return instance
+    
+
+    
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()

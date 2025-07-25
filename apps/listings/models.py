@@ -83,7 +83,6 @@ class ListingImage(models.Model):
     def __str__(self):
         return f"Фото → {self.listing.title}"
 
-# (Остальные модели остаются без изменений)
 # ───── Одиночное изображение ─────
 class SingleImage(models.Model):
     image = models.ImageField("Изображение", upload_to='single_images/')
