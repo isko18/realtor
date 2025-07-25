@@ -21,9 +21,6 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework.permissions import AllowAny
 
-from .models import Listing, Location, Application, SingleImage, TextMessage
-from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer
-from apps.users.models import User
 
 # ─── Права ───────────────────────────────────────────────
 class IsRealtor(permissions.BasePermission):
@@ -179,6 +176,7 @@ class ApplicationSubmitView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
 # ─── Одиночное изображение ───────
 class ImageUploadView(generics.GenericAPIView):
     serializer_class = SingleImageSerializer
