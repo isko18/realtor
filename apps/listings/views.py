@@ -8,8 +8,8 @@ from datetime import timedelta
 from rest_framework.permissions import AllowAny
 
 
-from .models import Listing, Location, Application, SingleImage, TextMessage, ListingImage
-from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer,  ApplicationSerializer, SimpleApplicationSerializer, ApplicationPublicSerializer
+from .models import Listing, Location, Application, SingleImage, TextMessage, ListingImage, Bit
+from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer, BitSerializer
 from apps.users.models import User
 
 from rest_framework import generics, permissions, filters, status
@@ -133,6 +133,7 @@ class ListingLikeView(APIView):
 
 # ─── Заявки ───────────────────────────────────────────────
 
+# Заявки с объявлением и фото
 class ApplicationView(generics.GenericAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
@@ -142,8 +143,14 @@ class ApplicationView(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = ApplicationPublicSerializer(queryset, many=True)
+        serializer = BitSerializer(queryset, many=True)
         return Response(serializer.data)
+    
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -167,15 +174,22 @@ class ApplicationView(generics.GenericAPIView):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class ApplicationSubmitView(generics.CreateAPIView):
-    queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
+
+class BitView(generics.GenericAPIView):
+    queryset = Bit.objects.all()
+    serializer_class = BitSerializer
     permission_classes = [permissions.AllowAny]
 
-class SimpleApplicationSubmitView(generics.CreateAPIView):
-    queryset = Application.objects.all()
-    serializer_class = SimpleApplicationSerializer
-    permission_classes = [permissions.AllowAny]
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 # ─── Одиночное изображение ───────

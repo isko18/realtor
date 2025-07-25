@@ -32,11 +32,14 @@ class ListingAdmin(admin.ModelAdmin):
         queryset.update(is_active=False)
 
 
+
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact_phone', 'message', 'created_at')
-    search_fields = ('name', 'contact_phone', 'message')
+    list_display = ('name', 'contact_phone', 'created_at')  
+    search_fields = ('name', 'contact_phone')               
     list_filter = ('created_at',)
     readonly_fields = ('created_at',)
 
     fields = ('name', 'contact_phone', 'listing', 'image', 'created_at')
+
+
