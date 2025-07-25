@@ -147,12 +147,6 @@ class ApplicationView(generics.GenericAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     def put(self, request, pk, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -174,23 +168,17 @@ class ApplicationView(generics.GenericAPIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 class ApplicationSubmitView(generics.CreateAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
-
-    def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 # ─── Одиночное изображение ───────
 class ImageUploadView(generics.GenericAPIView):
     serializer_class = SingleImageSerializer
