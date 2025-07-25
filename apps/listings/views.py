@@ -143,9 +143,9 @@ class ApplicationView(generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = BitSerializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

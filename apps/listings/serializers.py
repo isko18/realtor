@@ -99,28 +99,21 @@ class SingleImageSerializer(serializers.ModelSerializer):
 
 # ───── Заявка ─────
 
+from rest_framework import serializers
+from .models import Application, SingleImage
 
 class ApplicationSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Application
         fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'created_at']
         read_only_fields = ['id', 'created_at']
 
-    def get_image(self, obj):
-        try:
+    def get_image_url(self, obj):
+        if obj.image and obj.image.image:
             return obj.image.image.url
-        except Exception:
-            return None
-
-    def create(self, validated_data):
-        image_file = validated_data.pop('image_file', None)
-        application = Application.objects.create(**validated_data)
-        if image_file:
-            img = SingleImage.objects.create(image=image_file)
-            application.image = img
-            application.save()
-        return application
+        return None
 
 
 
