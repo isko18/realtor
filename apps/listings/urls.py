@@ -10,7 +10,7 @@ from .views import (
     ApplicationView,
     ImageUploadView,
     admin_stats,
-    ApplicationSubmitView,
+    ApplicationSubmitView, 
     TextMessageView
 )
 
@@ -22,11 +22,11 @@ urlpatterns = [
     path('listings/<int:pk>/', ListingRetrieveUpdateDestroyView.as_view(), name='listing-detail'),
     path('listings/<int:pk>/like/', ListingLikeView.as_view(), name='listing-like'),
     path('listings/my/', MyListingsView.as_view(), name='my-listings'),
-    path('applications/', ApplicationView.as_view(), name='application-list'),  # Список и детали заявок
+    path('applications/', ApplicationView.as_view(), name='application-list'),
     path('applications/<int:pk>/', ApplicationView.as_view(), name='application-detail'),
-    path('applications/submit/', ApplicationSubmitView.as_view(), name='application-submit'),  # Только для создания
     path('images/', ImageUploadView.as_view(), name='image-upload-list'),
     path('images/<int:pk>/', ImageUploadView.as_view(), name='image-upload-detail'),
     path('admin/stats/', admin_stats, name='admin-stats'),
+    path('listings/applications/submit/', ApplicationSubmitView.as_view(), name='application-submit'), 
     path('text-message/', TextMessageView.as_view(), name='text-message'),
-]
+]   
