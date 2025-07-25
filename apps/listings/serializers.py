@@ -107,7 +107,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Application
-        fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'message', 'created_at', 'image_file']
+        fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'created_at', 'image_file']
         read_only_fields = ['id', 'created_at', 'image']
 
     def create(self, validated_data):

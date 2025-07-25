@@ -132,15 +132,6 @@ class ListingLikeView(APIView):
         return Response({"likes_count": listing.likes_count}, status=status.HTTP_200_OK)
 
 # ─── Заявки ───────────────────────────────────────────────
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
-from .models import Application
-from .serializers import (
-    ApplicationSerializer,
-    SimpleApplicationSerializer,
-    ApplicationPublicSerializer
-)
-
 class ApplicationView(generics.GenericAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
