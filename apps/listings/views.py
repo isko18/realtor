@@ -54,60 +54,61 @@ class LocationDeleteView(generics.DestroyAPIView):
 
 # ─── Объявления ───────────────────────────────────────────
 class ListingListCreateView(generics.ListCreateAPIView):
-    serializer_class = ListingSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = {
-        'location__city': ['exact'],
-        'location__district': ['exact'],
-        'deal_type': ['exact'],
-        'price': ['gte', 'lte'],
-        'rooms': ['exact'],
-        'area': ['gte', 'lte'],
-    }
-    search_fields = ['title', 'description', 'address']
-    ordering_fields = ['price', 'created_at', 'area', 'likes_count']
+        serializer_class = ListingSerializer
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+        filterset_fields = {
+            'location__city': ['exact'],
+            'location__district': ['exact'],
+            'deal_type': ['exact'],
+            'price': ['gte', 'lte'],
+            'rooms': ['exact'],
+            'area': ['gte', 'lte'],
+        }
+        search_fields = ['title', 'description', 'address']
+        ordering_fields = ['price', 'created_at', 'area', 'likes_count']
 
-    def get_queryset(self):
-        if self.request.user.is_authenticated and self.request.user.role == 'admin':
-            return Listing.objects.all()
-        return Listing.objects.filter(is_active=True)
+        def get_queryset(self):
+            if self.request.user.is_authenticated and self.request.user.role == 'admin':
+                return Listing.objects.all()
+            return Listing.objects.filter(is_active=True)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        def perform_create(self, serializer):
+            serializer.save(owner=self.request.user)
 
-    def put(self, request, *args, **kwargs):
-        data = request.data
-        if not isinstance(data, list):
-            return Response({"detail": "Ожидается список объектов"}, status=status.HTTP_400_BAD_REQUEST)
-        updated_count = 0
-        for item in data:
-            try:
-                instance = Listing.objects.get(pk=item.get('id'))
-                serializer = self.get_serializer(instance, data=item, partial=True)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                updated_count += 1
-            except Listing.DoesNotExist:
-                continue
-        return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
+        def put(self, request, *args, **kwargs):
+            data = request.data
+            if not isinstance(data, list):
+                return Response({"detail": "Ожидается список объектов"}, status=status.HTTP_400_BAD_REQUEST)
+            updated_count = 0
+            for item in data:
+                try:
+                    instance = Listing.objects.get(pk=item.get('id'))
+                    serializer = self.get_serializer(instance, data=item, partial=True)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    updated_count += 1
+                except Listing.DoesNotExist:
+                    continue
+            return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
 
 
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Listing.objects.all()
-    serializer_class = ListingSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+        queryset = Listing.objects.all()
+        serializer_class = ListingSerializer
+        permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
+        def perform_destroy(self, instance):
+            instance.is_active = False
+            instance.save()
 
 class MyListingsView(generics.ListAPIView):
-    serializer_class = ListingSerializer
-    permission_classes = [permissions.IsAuthenticated, IsRealtor]
+        serializer_class = ListingSerializer
+        permission_classes = [permissions.IsAuthenticated, IsRealtor]
 
-    def get_queryset(self):
-        return Listing.objects.filter(owner=self.request.user)
+        def get_queryset(self):
+            return Listing.objects.filter(owner=self.request.user)
+        
 # ─── Лайки ───────────────────────────────────────────────
 class ListingLikeView(APIView):
     permission_classes = [permissions.AllowAny]
