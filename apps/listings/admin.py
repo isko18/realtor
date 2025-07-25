@@ -38,3 +38,5 @@ class ApplicationAdmin(admin.ModelAdmin):
     search_fields = ('name', 'contact_phone', 'message')
     list_filter = ('created_at',)
     readonly_fields = ('created_at',)
+
+    fields = ('name', 'contact_phone', 'message', 'created_at') 
