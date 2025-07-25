@@ -96,21 +96,34 @@ class SingleImage(models.Model):
 
 # ───── Заявка ─────
 class Application(models.Model):
-    name = models.CharField("Имя", max_length=100, default="Unknown")
-    contact_phone = models.CharField("Телефон для связи", max_length=30)
-    message = models.TextField("Сообщение", blank=True)
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Объявление")
-    image = models.ForeignKey(SingleImage, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Изображение")
-    created_at = models.DateTimeField("Дата заявки", auto_now_add=True)
-
+    name = models.CharField(max_length=255)
+    contact_phone = models.CharField(max_length=100)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='applications/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
-        verbose_name = "Заявка"
-        verbose_name_plural = "Заявки"
+        verbose_name = "Заявка с объявлением"
+        verbose_name_plural = "Заявки с объявлениями"
         ordering = ['-created_at']
 
     def __str__(self):
         return f"Заявка: {self.name} ({self.contact_phone})"
-    
+
+
+class Bit(models.Model):
+    name = models.CharField("Имя", max_length=100)
+    contact_phone = models.CharField("Телефон", max_length=30)
+    message = models.TextField("Сообщение", blank=True)
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Простая заявка"
+        verbose_name_plural = "Простые заявки"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Простая заявка: {self.name} ({self.contact_phone})"
+
 class TextMessage(models.Model):
     text = models.TextField("Текст", max_length=500)
 

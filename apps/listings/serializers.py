@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from .models import Location, Listing, ListingImage, Application, SingleImage, TextMessage
+from .models import Location, Listing, ListingImage, Application, Bit, SingleImage, TextMessage
 
-from rest_framework import serializers
-from .models import Location, Listing, ListingImage, Application, SingleImage, TextMessage
 
 # ───── Локация ─────
 class LocationSerializer(serializers.ModelSerializer):
@@ -101,39 +99,36 @@ class SingleImageSerializer(serializers.ModelSerializer):
 
 # ───── Заявка ─────
 
+
 class ApplicationSerializer(serializers.ModelSerializer):
-    listing = serializers.PrimaryKeyRelatedField(queryset=Listing.objects.all(), required=True)
-    image_file = serializers.ImageField(write_only=True, required=False)
-    image = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Application
-        fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'created_at', 'image_file']
-        read_only_fields = ['id', 'created_at', 'image']
+        fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
     def get_image(self, obj):
-        return obj.image.image.url if obj.image else None
+        try:
+            return obj.image.image.url
+        except Exception:
+            return None
 
     def create(self, validated_data):
         image_file = validated_data.pop('image_file', None)
-        app = Application.objects.create(**validated_data)
+        application = Application.objects.create(**validated_data)
         if image_file:
             img = SingleImage.objects.create(image=image_file)
-            app.image = img
-            app.save()
-        return app
+            application.image = img
+            application.save()
+        return application
 
-class SimpleApplicationSerializer(serializers.ModelSerializer):
+
+
+class BitSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Application
+        model = Bit
         fields = ['id', 'name', 'contact_phone', 'message', 'created_at']
         read_only_fields = ['id', 'created_at']
-
-class ApplicationPublicSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Application
-        fields = ['name', 'contact_phone', 'listing', 'image']
-
 
 
 class TextMessageSerializer(serializers.ModelSerializer):
