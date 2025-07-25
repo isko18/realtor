@@ -107,7 +107,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Application
-        fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'message', 'created_at', 'image_file']  # добавил 'listing' и запятую
+        fields = ['id', 'name', 'contact_phone', 'listing', 'image', 'message', 'created_at', 'image_file']
         read_only_fields = ['id', 'created_at', 'image']
 
     def create(self, validated_data):
@@ -118,6 +118,18 @@ class ApplicationSerializer(serializers.ModelSerializer):
             application.image = single_image
             application.save()
         return application
+
+class SimpleApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ['id', 'name', 'contact_phone', 'message', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+class ApplicationPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        fields = ['name', 'contact_phone', 'listing', 'image']
+
 
 class TextMessageSerializer(serializers.ModelSerializer):
     class Meta:
