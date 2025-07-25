@@ -22,51 +22,71 @@ class ListingSerializer(serializers.ModelSerializer):
     location_id = serializers.PrimaryKeyRelatedField(
         queryset=Location.objects.all(),
         write_only=True,
+        required=False,
+        allow_null=True,
         source='location'
     )
-    images = ListingImageSerializer(many=True, read_only=True)
-    image_files = serializers.ListField(
-        child=serializers.ImageField(allow_empty_file=True),
+
+    media_files = serializers.ListField(
+        child=serializers.FileField(allow_empty_file=True),
         write_only=True,
         required=False
     )
-    video_file = serializers.FileField(write_only=True, required=False)
+
+    images = ListingImageSerializer(many=True, read_only=True)
+
+    media = serializers.SerializerMethodField() 
 
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
-            'location', 'location_id',
-            'address', 'deal_type', 'is_active', 'created_at',
-            'images', 'image_files', 'likes_count', 'video', 'video_file'  
+            'location', 'location_id', 'address', 'deal_type',
+            'is_active', 'created_at', 'likes_count',
+            'images', 'video', 
+            'media',       
+            'media_files'    
         ]
 
     def create(self, validated_data):
-        image_files = validated_data.pop('image_files', [])
-        video_file = validated_data.pop('video_file', None)
+        media_files = validated_data.pop('media_files', [])
         listing = Listing.objects.create(**validated_data)
-        for image_file in image_files:
-            if image_file:
-                ListingImage.objects.create(listing=listing, image=image_file)
-        if video_file:
-            listing.video = video_file
-            listing.save()
+
+        for file in media_files:
+            if file.content_type.startswith("image/"):
+                ListingImage.objects.create(listing=listing, image=file)
+            elif file.content_type.startswith("video/"):
+                listing.video = file
+                listing.save()
         return listing
 
     def update(self, instance, validated_data):
-        image_files = validated_data.pop('image_files', [])
-        video_file = validated_data.pop('video_file', None)
+        media_files = validated_data.pop('media_files', [])
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.save()
-        for image_file in image_files:
-            if image_file:
-                ListingImage.objects.create(listing=instance, image=image_file)
-        if video_file:
-            instance.video = video_file
-            instance.save()
+
+        for file in media_files:
+            if file.content_type.startswith("image/"):
+                ListingImage.objects.create(listing=instance, image=file)
+            elif file.content_type.startswith("video/"):
+                instance.video = file
+                instance.save()
         return instance
-    
+
+    def get_media(self, obj):
+        media = []
+        for img in obj.images.all():
+            media.append({
+                "type": "image",
+                "url": img.image.url
+            })
+        if obj.video:
+            media.append({
+                "type": "video",
+                "url": obj.video.url
+            })
+        return media
 
     
 # ───── Одиночное изображение ─────
@@ -87,7 +107,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Application
-        fields = ['id', 'name', 'contact_phone', 'message', 'listing', 'image_file', 'image', 'created_at']
+        fields = ['id', 'name', 'contact_phone', 'listing', 'image_file', 'image', 'created_at']
         read_only_fields = ['id', 'created_at', 'image']
 
     def create(self, validated_data):

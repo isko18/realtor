@@ -185,6 +185,11 @@ class ApplicationSubmitView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    def get(self, request, *args, **kwargs):
+        applications = self.get_queryset()
+        serializer = self.get_serializer(applications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # ─── Одиночное изображение ───────
 class ImageUploadView(generics.GenericAPIView):
