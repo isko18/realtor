@@ -249,5 +249,15 @@ class TextMessageView(generics.ListAPIView):
     serializer_class = TextMessageSerializer
     permission_classes = [AllowAny]
     
+    def get(self, request, *args, **kwargs):
+        messages = self.get_queryset()
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
