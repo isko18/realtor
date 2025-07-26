@@ -15,35 +15,31 @@ class ListingImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 # ───── Объявление ─────
-from rest_framework import serializers
-from .models import Location, Listing, ListingImage
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ['id', 'city', 'district']
-
-class ListingImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ListingImage
-        fields = ['id', 'image']
-
 class ListingSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     location_id = serializers.PrimaryKeyRelatedField(
         queryset=Location.objects.all(),
         write_only=True,
-        required=True,   
+        required=True,
         source='location'
     )
 
-    title = serializers.CharField(required=True)         
-    description = serializers.CharField(required=True)   
-    price = serializers.DecimalField(max_digits=12, decimal_places=2, required=True) 
-    area = serializers.DecimalField(max_digits=8, decimal_places=2, required=True)    
-    address = serializers.CharField(required=True)       
-    deal_type = serializers.CharField(required=True)     
-    property_type = serializers.CharField(required=True) 
+    title = serializers.CharField(required=True)
+    description = serializers.CharField(required=True)
+    price = serializers.DecimalField(max_digits=12, decimal_places=2, required=True)
+    area = serializers.DecimalField(max_digits=8, decimal_places=2, required=True)
+    address = serializers.CharField(required=True)
+    deal_type = serializers.CharField(required=True)
+    property_type = serializers.CharField(required=True)
+
+    rooms = serializers.IntegerField(required=False, allow_null=True)
+    floor = serializers.IntegerField(required=False, allow_null=True)
+    land_area = serializers.DecimalField(max_digits=8, decimal_places=2, required=False, allow_null=True)
+    commercial_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    condition = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    utilities = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    purpose = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    parking = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     media_files = serializers.ListField(
         child=serializers.FileField(allow_empty_file=True),
@@ -88,11 +84,6 @@ class ListingSerializer(serializers.ModelSerializer):
         for img in obj.images.all():
             media.append({"type": "image", "url": img.image.url})
         return media
-
-class ListingImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ListingImage
-        fields = ['id', 'image']
 
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
