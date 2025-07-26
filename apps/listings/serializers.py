@@ -32,18 +32,18 @@ class ListingSerializer(serializers.ModelSerializer):
     )
 
     images = ListingImageSerializer(many=True, read_only=True)
-
-    media = serializers.SerializerMethodField() 
+    media = serializers.SerializerMethodField()
 
     class Meta:
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
+            'floor', 'land_area', 'commercial_type', 'condition', 'utilities', 'purpose', 'parking',
             'location', 'location_id', 'address', 'deal_type',
             'is_active', 'created_at', 'likes_count',
-            'images', 'video', 
-            'media',       
-            'media_files'    
+            'images', 'video',
+            'media',
+            'media_files'
         ]
 
     def create(self, validated_data):
@@ -75,18 +75,11 @@ class ListingSerializer(serializers.ModelSerializer):
     def get_media(self, obj):
         media = []
         for img in obj.images.all():
-            media.append({
-                "type": "image",
-                "url": img.image.url
-            })
+            media.append({"type": "image", "url": img.image.url})
         if obj.video:
-            media.append({
-                "type": "video",
-                "url": obj.video.url
-            })
+            media.append({"type": "video", "url": obj.video.url})
         return media
 
-    
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
