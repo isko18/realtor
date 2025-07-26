@@ -25,6 +25,14 @@ class Listing(models.Model):
         ('rent', 'Аренда'),
     ]
 
+    PROPERTY_TYPE_CHOICES = [
+        ('apartment', 'Квартира'),
+        ('house', 'Дом'),
+        ('land', 'Земля'),
+        ('commercial', 'Коммерческая'),
+        ('other', 'Другое'),
+    ]
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -37,19 +45,25 @@ class Listing(models.Model):
     rooms = models.PositiveSmallIntegerField("Количество комнат")
     area = models.DecimalField("Площадь (м²)", max_digits=7, decimal_places=2)
     location = models.ForeignKey(
-        Location,
+        "Location",
         on_delete=models.SET_NULL,
         null=True,
         verbose_name="Локация (город/район)"
     )
     address = models.CharField("Адрес", max_length=255)
     deal_type = models.CharField("Тип сделки", max_length=10, choices=DEAL_TYPE_CHOICES)
+    property_type = models.CharField( 
+        "Тип недвижимости",
+        max_length=20,
+        choices=PROPERTY_TYPE_CHOICES,
+        default='apartment'
+    )
+
     is_active = models.BooleanField("Активно", default=True)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     likes_count = models.PositiveIntegerField("Количество лайков", default=0)
     video = models.FileField("Видео", upload_to='listing_videos/', null=True, blank=True)
 
-    # ✅ Новые поля
     floor = models.PositiveSmallIntegerField("Этаж", null=True, blank=True)
     land_area = models.DecimalField("Площадь участка (сотки)", max_digits=7, decimal_places=2, null=True, blank=True)
     commercial_type = models.CharField("Тип коммерции", max_length=100, null=True, blank=True)

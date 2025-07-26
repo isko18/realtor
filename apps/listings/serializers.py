@@ -15,6 +15,19 @@ class ListingImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 # ───── Объявление ─────
+from rest_framework import serializers
+from .models import Listing, Location, ListingImage
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ['id', 'city', 'district']
+
+class ListingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ListingImage
+        fields = ['id', 'image']
+
 class ListingSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     location_id = serializers.PrimaryKeyRelatedField(
@@ -39,6 +52,7 @@ class ListingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
             'floor', 'land_area', 'commercial_type', 'condition', 'utilities', 'purpose', 'parking',
+            'property_type',
             'location', 'location_id', 'address', 'deal_type',
             'is_active', 'created_at', 'likes_count',
             'images', 'video',
@@ -49,7 +63,6 @@ class ListingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         media_files = validated_data.pop('media_files', [])
         listing = Listing.objects.create(**validated_data)
-
         for file in media_files:
             if file.content_type.startswith("image/"):
                 ListingImage.objects.create(listing=listing, image=file)
