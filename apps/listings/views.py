@@ -174,7 +174,6 @@ class ApplicationView(generics.GenericAPIView):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 class BitView(generics.GenericAPIView):
     queryset = Bit.objects.all()
     serializer_class = BitSerializer
@@ -191,6 +190,28 @@ class BitView(generics.GenericAPIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def put(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"detail": "ID is required for update."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            bit = Bit.objects.get(pk=pk)
+        except Bit.DoesNotExist:
+            return Response({"detail": "Bit not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(bit, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"detail": "ID is required for deletion."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            bit = Bit.objects.get(pk=pk)
+        except Bit.DoesNotExist:
+            return Response({"detail": "Bit not found."}, status=status.HTTP_404_NOT_FOUND)
+        bit.delete()
+        return Response({"detail": "Bit deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 # ─── Одиночное изображение ───────
 class ImageUploadView(generics.GenericAPIView):
@@ -249,12 +270,12 @@ def admin_stats(request):
     }
     return Response(data)
 
-
-class TextMessageView(generics.ListAPIView):
+# ─── Текст ───────────────────────────
+class TextMessageView(generics.GenericAPIView):
     queryset = TextMessage.objects.all()
     serializer_class = TextMessageSerializer
     permission_classes = [AllowAny]
-    
+
     def get(self, request, *args, **kwargs):
         messages = self.get_queryset()
         serializer = self.get_serializer(messages, many=True)
@@ -266,4 +287,25 @@ class TextMessageView(generics.ListAPIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def put(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"detail": "Message ID (pk) is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            message = TextMessage.objects.get(pk=pk)
+        except TextMessage.DoesNotExist:
+            return Response({"detail": "Message not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        serializer = self.get_serializer(message, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        if pk is None:
+            return Response({"detail": "Message ID (pk) is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            message = TextMessage.objects.get(pk=pk)
+        except TextMessage.DoesNotExist:
+            return Response({"detail": "Message not found."}, status=status.HTTP_404_NOT_FOUND)
+        message.delete()
+        return Response({"detail": "Message deleted."}, status=status.HTTP_204_NO_CONTENT)

@@ -26,6 +26,8 @@ urlpatterns = [
 
     path('applications/', ApplicationView.as_view(), name='application-list'),
     path('Bit/' , BitView.as_view(), name='Bit'),
+    path('bits/<int:pk>/', BitView.as_view(), name='bit-detail'), 
+
     path('applications/<int:pk>/', ApplicationView.as_view(), name='application-detail'),
 
     path('images/', ImageUploadView.as_view(), name='image-upload-list'),
@@ -33,4 +35,5 @@ urlpatterns = [
 
     path('admin/stats/', admin_stats, name='admin-stats'),
     path('text-message/', TextMessageView.as_view(), name='text-message'),
+    path('text-messages/<int:pk>/', TextMessageView.as_view(), name='message_detail'), 
 ]
