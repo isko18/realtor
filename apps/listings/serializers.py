@@ -15,15 +15,35 @@ class ListingImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 # ───── Объявление ─────
+from rest_framework import serializers
+from .models import Location, Listing, ListingImage
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ['id', 'city', 'district']
+
+class ListingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ListingImage
+        fields = ['id', 'image']
+
 class ListingSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     location_id = serializers.PrimaryKeyRelatedField(
         queryset=Location.objects.all(),
         write_only=True,
-        required=False,
-        allow_null=True,
+        required=True,   
         source='location'
     )
+
+    title = serializers.CharField(required=True)         
+    description = serializers.CharField(required=True)   
+    price = serializers.DecimalField(max_digits=12, decimal_places=2, required=True) 
+    area = serializers.DecimalField(max_digits=8, decimal_places=2, required=True)    
+    address = serializers.CharField(required=True)       
+    deal_type = serializers.CharField(required=True)     
+    property_type = serializers.CharField(required=True) 
 
     media_files = serializers.ListField(
         child=serializers.FileField(allow_empty_file=True),
@@ -38,17 +58,16 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
+            'floor', 'land_area', 'commercial_type', 'condition',
+            'utilities', 'purpose', 'parking', 'property_type',
             'location', 'location_id', 'address', 'deal_type',
-            'is_active', 'created_at', 'likes_count', 'images', 'media',
-            'media_files',
-            'property_type', 'floor', 'land_area', 'commercial_type',
-            'condition', 'utilities', 'purpose', 'parking'
+            'is_active', 'created_at', 'likes_count',
+            'images', 'media', 'media_files'
         ]
 
     def create(self, validated_data):
         media_files = validated_data.pop('media_files', [])
         listing = Listing.objects.create(**validated_data)
-
         for file in media_files:
             if file.content_type.startswith("image/"):
                 ListingImage.objects.create(listing=listing, image=file)
@@ -59,7 +78,6 @@ class ListingSerializer(serializers.ModelSerializer):
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.save()
-
         for file in media_files:
             if file.content_type.startswith("image/"):
                 ListingImage.objects.create(listing=instance, image=file)
@@ -68,10 +86,7 @@ class ListingSerializer(serializers.ModelSerializer):
     def get_media(self, obj):
         media = []
         for img in obj.images.all():
-            media.append({
-                "type": "image",
-                "url": img.image.url
-            })
+            media.append({"type": "image", "url": img.image.url})
         return media
 
 class ListingImageSerializer(serializers.ModelSerializer):
