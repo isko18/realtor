@@ -11,22 +11,20 @@ class LocationAdmin(admin.ModelAdmin):
 class ListingImageInline(admin.TabularInline):
     model = ListingImage
     extra = 1
-    readonly_fields = ['image']
-    fields = ['image']  
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'owner', 'deal_type', 'price', 'likes_count',
-        'is_active', 'created_at', 'floor', 'land_area', 'parking'
+        'title', 'owner', 'deal_type', 'property_type', 'price',
+        'likes_count', 'is_active', 'created_at', 'floor', 'land_area', 'parking'
     )
     list_filter = (
-        'deal_type', 'is_active', 'location__city',
+        'deal_type', 'property_type', 'is_active', 'location__city',
         'commercial_type', 'condition', 'parking'
     )
     search_fields = (
         'title', 'description', 'address',
-        'commercial_type', 'condition', 'purpose'
+        'commercial_type', 'condition', 'purpose', 'property_type'
     )
     inlines = [ListingImageInline]
     actions = ['mark_active', 'mark_inactive']
@@ -38,7 +36,6 @@ class ListingAdmin(admin.ModelAdmin):
     @admin.action(description='Снять с публикации')
     def mark_inactive(self, request, queryset):
         queryset.update(is_active=False)
-
 
 
 @admin.register(Application)

@@ -58,6 +58,7 @@ class ListingListCreateView(generics.ListCreateAPIView):
         'location__city': ['exact'],
         'location__district': ['exact'],
         'deal_type': ['exact'],
+        'property_type': ['exact'],
         'price': ['gte', 'lte'],
         'rooms': ['exact'],
         'area': ['gte', 'lte'],
@@ -93,7 +94,7 @@ class ListingListCreateView(generics.ListCreateAPIView):
             except Listing.DoesNotExist:
                 continue
         return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
-
+    
 
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         queryset = Listing.objects.all()
