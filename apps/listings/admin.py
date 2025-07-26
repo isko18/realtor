@@ -14,12 +14,20 @@ class ListingImageInline(admin.TabularInline):
     readonly_fields = ['image']
     fields = ['image']  
 
-
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'owner', 'deal_type', 'price', 'likes_count', 'is_active', 'created_at')
-    list_filter = ('deal_type', 'is_active', 'location__city')
-    search_fields = ('title', 'description', 'address')
+    list_display = (
+        'title', 'owner', 'deal_type', 'price', 'likes_count',
+        'is_active', 'created_at', 'floor', 'land_area', 'parking'
+    )
+    list_filter = (
+        'deal_type', 'is_active', 'location__city',
+        'commercial_type', 'condition', 'parking'
+    )
+    search_fields = (
+        'title', 'description', 'address',
+        'commercial_type', 'condition', 'purpose'
+    )
     inlines = [ListingImageInline]
     actions = ['mark_active', 'mark_inactive']
 
@@ -41,5 +49,3 @@ class ApplicationAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
     fields = ('name', 'contact_phone', 'listing', 'image', 'created_at')
-
-

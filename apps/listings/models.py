@@ -47,7 +47,16 @@ class Listing(models.Model):
     is_active = models.BooleanField("Активно", default=True)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     likes_count = models.PositiveIntegerField("Количество лайков", default=0)
-    video = models.FileField("Видео", upload_to='listing_videos/', null=True, blank=True)  # Новое поле для видео
+    video = models.FileField("Видео", upload_to='listing_videos/', null=True, blank=True)
+
+    # ✅ Новые поля
+    floor = models.PositiveSmallIntegerField("Этаж", null=True, blank=True)
+    land_area = models.DecimalField("Площадь участка (сотки)", max_digits=7, decimal_places=2, null=True, blank=True)
+    commercial_type = models.CharField("Тип коммерции", max_length=100, null=True, blank=True)
+    condition = models.CharField("Состояние", max_length=100, null=True, blank=True)
+    utilities = models.TextField("Коммуникации", null=True, blank=True)
+    purpose = models.CharField("Назначение", max_length=255, null=True, blank=True)
+    parking = models.BooleanField("Наличие парковки", default=False)
 
     class Meta:
         ordering = ['-created_at']
