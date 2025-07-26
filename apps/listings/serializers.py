@@ -15,19 +15,6 @@ class ListingImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
 # ───── Объявление ─────
-from rest_framework import serializers
-from .models import Listing, Location, ListingImage
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ['id', 'city', 'district']
-
-class ListingImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ListingImage
-        fields = ['id', 'image']
-
 class ListingSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     location_id = serializers.PrimaryKeyRelatedField(
@@ -51,24 +38,20 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         fields = [
             'id', 'title', 'description', 'price', 'rooms', 'area',
-            'floor', 'land_area', 'commercial_type', 'condition', 'utilities', 'purpose', 'parking',
-            'property_type',
             'location', 'location_id', 'address', 'deal_type',
-            'is_active', 'created_at', 'likes_count',
-            'images', 'video',
-            'media',
-            'media_files'
+            'is_active', 'created_at', 'likes_count', 'images', 'media',
+            'media_files',
+            'property_type', 'floor', 'land_area', 'commercial_type',
+            'condition', 'utilities', 'purpose', 'parking'
         ]
 
     def create(self, validated_data):
         media_files = validated_data.pop('media_files', [])
         listing = Listing.objects.create(**validated_data)
+
         for file in media_files:
             if file.content_type.startswith("image/"):
                 ListingImage.objects.create(listing=listing, image=file)
-            elif file.content_type.startswith("video/"):
-                listing.video = file
-                listing.save()
         return listing
 
     def update(self, instance, validated_data):
@@ -80,18 +63,21 @@ class ListingSerializer(serializers.ModelSerializer):
         for file in media_files:
             if file.content_type.startswith("image/"):
                 ListingImage.objects.create(listing=instance, image=file)
-            elif file.content_type.startswith("video/"):
-                instance.video = file
-                instance.save()
         return instance
 
     def get_media(self, obj):
         media = []
         for img in obj.images.all():
-            media.append({"type": "image", "url": img.image.url})
-        if obj.video:
-            media.append({"type": "video", "url": obj.video.url})
+            media.append({
+                "type": "image",
+                "url": img.image.url
+            })
         return media
+
+class ListingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ListingImage
+        fields = ['id', 'image']
 
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):

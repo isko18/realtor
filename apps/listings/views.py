@@ -58,21 +58,16 @@ class ListingListCreateView(generics.ListCreateAPIView):
         'location__city': ['exact'],
         'location__district': ['exact'],
         'deal_type': ['exact'],
-        'property_type': ['exact'],
         'price': ['gte', 'lte'],
         'rooms': ['exact'],
         'area': ['gte', 'lte'],
-        'floor': ['exact', 'gte', 'lte'],
-        'land_area': ['gte', 'lte'],
-        'commercial_type': ['exact'],
-        'condition': ['exact'],
-        'parking': ['exact'],
+        'property_type': ['exact'],
     }
     search_fields = ['title', 'description', 'address']
     ordering_fields = ['price', 'created_at', 'area', 'likes_count']
 
     def get_queryset(self):
-        if self.request.user.is_authenticated and getattr(self.request.user, 'role', None) == 'admin':
+        if self.request.user.is_authenticated and self.request.user.role == 'admin':
             return Listing.objects.all()
         return Listing.objects.filter(is_active=True)
 
@@ -94,7 +89,7 @@ class ListingListCreateView(generics.ListCreateAPIView):
             except Listing.DoesNotExist:
                 continue
         return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
-    
+
 
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         queryset = Listing.objects.all()
