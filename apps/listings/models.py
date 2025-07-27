@@ -20,11 +20,6 @@ class Location(models.Model):
 
 # ───── Объявление ─────
 class Listing(models.Model):
-    DEAL_TYPE_CHOICES = [
-        ('sale', 'Продажа'),
-        ('rent', 'Аренда'),
-    ]
-
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -43,7 +38,7 @@ class Listing(models.Model):
         verbose_name="Локация (город/район)"
     )
     address = models.CharField("Адрес", max_length=255)
-    deal_type = models.CharField("Тип сделки", max_length=50, choices=DEAL_TYPE_CHOICES)
+    deal_type = models.CharField("Тип сделки", max_length=50)
     is_active = models.BooleanField("Активно", default=True)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     likes_count = models.PositiveIntegerField("Количество лайков", default=0)
