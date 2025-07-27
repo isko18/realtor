@@ -25,8 +25,9 @@ urlpatterns = [
     path('listings/<int:pk>/like/', ListingLikeView.as_view(), name='listing-like'),
     path('listings/my/', MyListingsView.as_view(), name='my-listings'),
 
-    path("single-field/", SingleFieldView.as_view(), name="single-field"),
     path("single-field/<int:pk>/", SingleFieldView.as_view(), name="single-field-detail"),
+    path("single-field/", SingleFieldView.as_view(), name="single-field"),
+
 
     path('applications/', ApplicationView.as_view(), name='application-list'),
     path('bit/' , BitView.as_view(), name='Bit'),

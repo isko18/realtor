@@ -108,38 +108,62 @@ class MyListingsView(generics.ListAPIView):
             return Listing.objects.filter(owner=self.request.user)
         
 
-
 class SingleFieldView(generics.GenericAPIView):
-    queryset = SingleField.objects.all()  
+    queryset = SingleField.objects.all()
     serializer_class = SingleFieldSerializer
     permission_classes = [permissions.AllowAny]
-    lookup_field = "pk"
+
+    def get_object(self):
+        pk = self.kwargs.get("pk")
+        if pk:
+            return SingleField.objects.get(pk=pk)
+        return None  # для list-роута
 
     def get(self, request, *args, **kwargs):
-        obj = SingleField.objects.first()
-        value = obj.value if obj else None
-        return Response({"value": value})
+        pk = kwargs.get("pk")
+        if pk:
+            try:
+                obj = self.get_object()
+                serializer = self.get_serializer(obj)
+                return Response(serializer.data)
+            except SingleField.DoesNotExist:
+                return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
-        value = request.data.get("value")
-        obj, created = SingleField.objects.get_or_create(id=1)
-        obj.value = value
-        obj.save()
-        return Response({"value": obj.value}, status=status.HTTP_201_CREATED)
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
-        value = request.data.get("value")
-        obj, created = SingleField.objects.get_or_create(id=1)
-        obj.value = value
+        pk = kwargs.get("pk")
+        if not pk:
+            return Response({"detail": "pk required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            obj = SingleField.objects.get(pk=pk)
+        except SingleField.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        obj.value = request.data.get("value", obj.value)
         obj.save()
-        return Response({"value": obj.value})
+        return Response({"id": obj.id, "value": obj.value})
 
     def delete(self, request, *args, **kwargs):
-        obj = SingleField.objects.first()
-        if obj:
+        pk = kwargs.get("pk")
+        if not pk:
+            return Response({"detail": "pk required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            obj = SingleField.objects.get(pk=pk)
             obj.delete()
             return Response({"detail": "Deleted"}, status=status.HTTP_204_NO_CONTENT)
-        return Response({"detail": "Nothing to delete"}, status=status.HTTP_404_NOT_FOUND)
+        except SingleField.DoesNotExist:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    
 
 # ─── Лайки ───────────────────────────────────────────────
 class ListingLikeView(APIView):
