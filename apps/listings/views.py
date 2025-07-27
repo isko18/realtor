@@ -8,8 +8,8 @@ from datetime import timedelta
 from rest_framework.permissions import AllowAny
 
 
-from .models import Listing, Location, Application, SingleImage, TextMessage, ListingImage, Bit
-from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer, BitSerializer
+from .models import Listing, Location, Application, SingleImage, TextMessage, ListingImage, Bit, SingleField
+from .serializers import ListingSerializer, LocationSerializer, ApplicationSerializer, SingleImageSerializer, TextMessageSerializer, BitSerializer, SingleFieldSerializer
 from apps.users.models import User
 
 from rest_framework import generics, permissions, filters, status
@@ -107,6 +107,39 @@ class MyListingsView(generics.ListAPIView):
         def get_queryset(self):
             return Listing.objects.filter(owner=self.request.user)
         
+
+
+class SingleFieldView(generics.GenericAPIView):
+    queryset = SingleField.objects.all()  
+    serializer_class = SingleFieldSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        obj = SingleField.objects.first()
+        value = obj.value if obj else None
+        return Response({"value": value})
+
+    def post(self, request, *args, **kwargs):
+        value = request.data.get("value")
+        obj, created = SingleField.objects.get_or_create(id=1)
+        obj.value = value
+        obj.save()
+        return Response({"value": obj.value}, status=status.HTTP_201_CREATED)
+
+    def put(self, request, *args, **kwargs):
+        value = request.data.get("value")
+        obj, created = SingleField.objects.get_or_create(id=1)
+        obj.value = value
+        obj.save()
+        return Response({"value": obj.value})
+
+    def delete(self, request, *args, **kwargs):
+        obj = SingleField.objects.first()
+        if obj:
+            obj.delete()
+            return Response({"detail": "Deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Nothing to delete"}, status=status.HTTP_404_NOT_FOUND)
+
 # ─── Лайки ───────────────────────────────────────────────
 class ListingLikeView(APIView):
     permission_classes = [permissions.AllowAny]

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Location, Listing, ListingImage, Application, Bit, SingleImage, TextMessage
+from .models import Location, Listing, SingleField, ListingImage, Application, Bit, SingleImage, TextMessage
 
 
 # ───── Локация ─────
@@ -32,6 +32,8 @@ class ListingSerializer(serializers.ModelSerializer):
     address = serializers.CharField(required=True)
     deal_type = serializers.CharField(required=True)
     property_type = serializers.CharField(required=True)
+    document = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     #Все остальные - НЕобязательные
     rooms = serializers.IntegerField(required=False, allow_null=True)
@@ -60,7 +62,7 @@ class ListingSerializer(serializers.ModelSerializer):
             'utilities', 'purpose', 'parking', 'property_type',
             'location', 'location_id', 'address', 'deal_type',
             'is_active', 'created_at', 'likes_count',
-            'images', 'media', 'media_files'
+            'images', 'media', 'media_files', 'document'
         ]
 
     def create(self, validated_data):
@@ -87,6 +89,12 @@ class ListingSerializer(serializers.ModelSerializer):
             media.append({"type": "image", "url": img.image.url})
         return media
 
+
+class SingleFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SingleField
+        fields = ['id', 'value']
+
 # ───── Одиночное изображение ─────
 class SingleImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
@@ -98,10 +106,6 @@ class SingleImageSerializer(serializers.ModelSerializer):
 
 
 # ───── Заявка ─────
-
-from rest_framework import serializers
-from .models import Application, SingleImage
-
 class ApplicationSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False, allow_null=True)
 

@@ -4,6 +4,7 @@ from .views import (
     ListingRetrieveUpdateDestroyView,
     MyListingsView,
     ListingLikeView,
+    SingleFieldView,
     LocationListView,
     LocationCreateView,
     LocationDeleteView,
@@ -23,6 +24,8 @@ urlpatterns = [
     path('listings/<int:pk>/', ListingRetrieveUpdateDestroyView.as_view(), name='listing-detail'),
     path('listings/<int:pk>/like/', ListingLikeView.as_view(), name='listing-like'),
     path('listings/my/', MyListingsView.as_view(), name='my-listings'),
+    path('single-field/', SingleFieldView.as_view(), name='single-field'),
+
 
     path('applications/', ApplicationView.as_view(), name='application-list'),
     path('bit/' , BitView.as_view(), name='Bit'),
