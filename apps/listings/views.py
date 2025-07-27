@@ -301,12 +301,15 @@ class TextMessageView(generics.GenericAPIView):
         serializer.save()
         return Response(serializer.data)
 
-    def delete(self, request, pk=None, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
         if pk is None:
             return Response({"detail": "ID is required for deletion."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             message = TextMessage.objects.get(pk=pk)
         except TextMessage.DoesNotExist:
             return Response({"detail": "Message not found."}, status=status.HTTP_404_NOT_FOUND)
+
         message.delete()
         return Response({"detail": "Message deleted."}, status=status.HTTP_204_NO_CONTENT)
