@@ -61,7 +61,8 @@ class Listing(models.Model):
         verbose_name_plural = "Объявления"
 
     def __str__(self):
-        return f"{self.title} ({self.get_deal_type_display()})"
+        return f"{self.title} ({self.deal_type})"
+
     
 class SingleField(models.Model):
     value  = models.CharField("Текст",max_length=255)  
