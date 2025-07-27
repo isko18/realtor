@@ -24,8 +24,8 @@ class SingleField(models.Model):
     value  = models.CharField("Текст",max_length=255)  
 
     class Meta:
-        verbose_name = "Одно поле"
-        verbose_name_plural = "Одно поле"
+        verbose_name = "complex"
+        verbose_name_plural = "complexs"
 
     def __str__(self):
         return self.value
