@@ -332,7 +332,7 @@ class TextMessageView(generics.GenericAPIView):
     queryset = TextMessage.objects.all()
     serializer_class = TextMessageSerializer
     permission_classes = [AllowAny]
-    lookup_field = "pk"
+    lookup_field = None
 
     def get(self, request, *args, **kwargs):
         messages = self.get_queryset()
