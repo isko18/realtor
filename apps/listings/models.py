@@ -43,7 +43,7 @@ class Listing(models.Model):
         verbose_name="Локация (город/район)"
     )
     address = models.CharField("Адрес", max_length=255)
-    deal_type = models.CharField("Тип сделки", max_length=10, choices=DEAL_TYPE_CHOICES)
+    deal_type = models.CharField("Тип сделки", max_length=50, choices=DEAL_TYPE_CHOICES)
     is_active = models.BooleanField("Активно", default=True)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     likes_count = models.PositiveIntegerField("Количество лайков", default=0)
@@ -57,6 +57,8 @@ class Listing(models.Model):
     utilities = models.TextField("Коммуникации", blank=True, null=True)
     purpose = models.CharField("Назначение", max_length=100, blank=True, null=True)
     parking = models.BooleanField("Парковка", default=False)
+    document = models.CharField("Документ",max_length=255, blank=True, null=True)
+
 
     class Meta:
         ordering = ['-created_at']
@@ -65,6 +67,16 @@ class Listing(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_deal_type_display()})"
+    
+class SingleField(models.Model):
+    value  = models.CharField("Текст",max_length=255)  
+
+    class Meta:
+        verbose_name = "Одно поле"
+        verbose_name_plural = "Одно поле"
+
+    def __str__(self):
+        return self.value
 
 # ───── Фото ─────
 class ListingImage(models.Model):
