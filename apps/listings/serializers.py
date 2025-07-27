@@ -64,7 +64,7 @@ class ListingSerializer(serializers.ModelSerializer):
             'utilities', 'purpose', 'parking', 'property_type',
             'location', 'location_id', 'address', 'deal_type',
             'is_active', 'created_at', 'likes_count',
-            'images', 'media', 'media_files', 'document'
+            'images', 'media', 'media_files', 'document', "single_field"
         ]
 
     def create(self, validated_data):
