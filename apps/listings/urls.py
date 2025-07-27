@@ -35,5 +35,6 @@ urlpatterns = [
 
     path('admin/stats/', admin_stats, name='admin-stats'),
     path('text-message/', TextMessageView.as_view(), name='text-message'),
-    path('text-messages/<int:pk>/', TextMessageView.as_view(), name='message_detail'), 
+    path('text-message/<int:pk>/', TextMessageView.as_view(), name='text-message-detail'),
+    
 ]

@@ -303,7 +303,7 @@ class TextMessageView(generics.GenericAPIView):
 
     def delete(self, request, pk=None, *args, **kwargs):
         if pk is None:
-            return Response({"detail": "Message ID (pk) is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "ID is required for deletion."}, status=status.HTTP_400_BAD_REQUEST)
         try:
             message = TextMessage.objects.get(pk=pk)
         except TextMessage.DoesNotExist:
