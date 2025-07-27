@@ -25,8 +25,8 @@ urlpatterns = [
     path('listings/my/', MyListingsView.as_view(), name='my-listings'),
 
     path('applications/', ApplicationView.as_view(), name='application-list'),
-    path('Bit/' , BitView.as_view(), name='Bit'),
-    path('bits/<int:pk>/', BitView.as_view(), name='bit-detail'), 
+    path('bit/' , BitView.as_view(), name='Bit'),
+    path('bit/<int:pk>/', BitView.as_view(), name='bit-detail'), 
 
     path('applications/<int:pk>/', ApplicationView.as_view(), name='application-detail'),
 

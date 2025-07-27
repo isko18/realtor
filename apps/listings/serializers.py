@@ -24,6 +24,7 @@ class ListingSerializer(serializers.ModelSerializer):
         source='location'
     )
 
+    #Обязательные поля
     title = serializers.CharField(required=True)
     description = serializers.CharField(required=True)
     price = serializers.DecimalField(max_digits=12, decimal_places=2, required=True)
@@ -32,6 +33,7 @@ class ListingSerializer(serializers.ModelSerializer):
     deal_type = serializers.CharField(required=True)
     property_type = serializers.CharField(required=True)
 
+    #Все остальные - НЕобязательные
     rooms = serializers.IntegerField(required=False, allow_null=True)
     floor = serializers.IntegerField(required=False, allow_null=True)
     land_area = serializers.DecimalField(max_digits=8, decimal_places=2, required=False, allow_null=True)

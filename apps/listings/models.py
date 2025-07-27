@@ -48,10 +48,8 @@ class Listing(models.Model):
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     likes_count = models.PositiveIntegerField("Количество лайков", default=0)
 
-    # Новое поле
     property_type = models.CharField("Тип недвижимости", max_length=100, blank=True, null=True)
 
-    # Дополнительные поля, которые вы ранее просили
     floor = models.PositiveSmallIntegerField("Этаж", blank=True, null=True)
     land_area = models.DecimalField("Площадь участка (сотки)", max_digits=7, decimal_places=2, blank=True, null=True)
     commercial_type = models.CharField("Тип коммерции", max_length=100, blank=True, null=True)
