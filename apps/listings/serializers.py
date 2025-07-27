@@ -32,7 +32,6 @@ class ListingSerializer(serializers.ModelSerializer):
     address = serializers.CharField(required=True)
     deal_type = serializers.CharField(required=True)
     property_type = serializers.CharField(required=True)
-    document = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
     #Все остальные - НЕобязательные
@@ -44,6 +43,9 @@ class ListingSerializer(serializers.ModelSerializer):
     utilities = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     purpose = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     parking = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    single_field = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    document = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
     media_files = serializers.ListField(
         child=serializers.FileField(allow_empty_file=True),

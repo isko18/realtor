@@ -19,6 +19,18 @@ class Location(models.Model):
         return f"{self.city}, {self.district}"
 
 # ───── Объявление ─────
+
+class SingleField(models.Model):
+    value  = models.CharField("Текст",max_length=255)  
+
+    class Meta:
+        verbose_name = "Одно поле"
+        verbose_name_plural = "Одно поле"
+
+    def __str__(self):
+        return self.value
+    
+
 class Listing(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -36,6 +48,13 @@ class Listing(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         verbose_name="Локация (город/район)"
+    )
+    single_field = models.ForeignKey(
+        SingleField,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="complex"
     )
     address = models.CharField("Адрес", max_length=255)
     deal_type = models.CharField("Тип сделки", max_length=50)
@@ -64,15 +83,7 @@ class Listing(models.Model):
         return f"{self.title} ({self.deal_type})"
 
     
-class SingleField(models.Model):
-    value  = models.CharField("Текст",max_length=255)  
 
-    class Meta:
-        verbose_name = "Одно поле"
-        verbose_name_plural = "Одно поле"
-
-    def __str__(self):
-        return self.value
 
 # ───── Фото ─────
 class ListingImage(models.Model):

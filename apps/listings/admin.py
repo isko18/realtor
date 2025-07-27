@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Listing, ListingImage, Location, Application
+from .models import Listing, ListingImage, Location, Application, SingleField
 
 
 @admin.register(Location)
@@ -14,9 +14,18 @@ class ListingImageInline(admin.TabularInline):
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ('title', 'owner', 'deal_type', 'price', 'likes_count', 'is_active', 'created_at', 'property_type')
-    list_filter = ('deal_type', 'is_active', 'location__city', 'property_type')
-    search_fields = ('title', 'description', 'address')
+    list_display = (
+        'title', 'owner', 'deal_type', 'property_type', 'price',
+        'likes_count', 'is_active', 'created_at', 'floor', 'land_area', 'parking'
+    )
+    list_filter = (
+        'deal_type', 'property_type', 'is_active', 'location__city',
+        'commercial_type', 'condition', 'parking'
+    )
+    search_fields = (
+        'title', 'description', 'address',
+        'commercial_type', 'condition', 'purpose', 'property_type'
+    )
     inlines = [ListingImageInline]
     actions = ['mark_active', 'mark_inactive']
 
@@ -37,3 +46,8 @@ class ApplicationAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
 
     fields = ('name', 'contact_phone', 'listing', 'image', 'created_at')
+
+@admin.register(SingleField)
+class SingleField(admin.ModelAdmin):
+    list_display = ('value',)
+    search_fields = ('value',)
