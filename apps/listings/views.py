@@ -113,6 +113,7 @@ class SingleFieldView(generics.GenericAPIView):
     queryset = SingleField.objects.all()  
     serializer_class = SingleFieldSerializer
     permission_classes = [permissions.AllowAny]
+    lookup_field = "pk"
 
     def get(self, request, *args, **kwargs):
         obj = SingleField.objects.first()
@@ -166,8 +167,6 @@ class ListingLikeView(APIView):
         return Response({"likes_count": listing.likes_count}, status=status.HTTP_200_OK)
 
 # ─── Заявки ───────────────────────────────────────────────
-
-# Заявки с объявлением и фото
 class ApplicationView(generics.GenericAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.AllowAny]
@@ -309,6 +308,7 @@ class TextMessageView(generics.GenericAPIView):
     queryset = TextMessage.objects.all()
     serializer_class = TextMessageSerializer
     permission_classes = [AllowAny]
+    lookup_field = "pk"
 
     def get(self, request, *args, **kwargs):
         messages = self.get_queryset()
