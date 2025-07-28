@@ -116,10 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru'
 
-LANGUAGES = (
-    ('ru', 'Russian'),
-    ('ky', 'Kyrgyz'),
-)
+
 
 TIME_ZONE = 'Asia/Bishkek'
 
