@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Listing, ListingImage, Location, Application, SingleField
+from .models import Listing, ListingImage, Location, Application, SingleField, Bit, TextMessage, SingleImage, ListingImage
 
 
 @admin.register(Location)
@@ -48,6 +48,28 @@ class ApplicationAdmin(admin.ModelAdmin):
     fields = ('name', 'contact_phone', 'listing', 'image', 'created_at')
 
 @admin.register(SingleField)
-class SingleField(admin.ModelAdmin):
+class SingleFieldAdmin(admin.ModelAdmin):
     list_display = ('value',)
     search_fields = ('value',)
+
+
+@admin.register(Bit)
+class BitAdmin(admin.ModelAdmin):
+    list_display = ('name', 'contact_phone', 'created_at')
+    search_fields = ('name', 'contact_phone')
+    list_filter = ('created_at',)
+
+@admin.register(TextMessage)
+class TextMessageAdmin(admin.ModelAdmin):
+    list_display = ('text',)
+    search_fields = ('text',)
+
+@admin.register(SingleImage)
+class SingleImageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'image')
+    readonly_fields = ('image',)
+
+@admin.register(ListingImage)
+class ListingImageAdmin(admin.ModelAdmin):
+    list_display = ('listing', 'image')
+    search_fields = ('listing__title',)
