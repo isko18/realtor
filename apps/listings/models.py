@@ -155,6 +155,7 @@ class Bit(models.Model):
 class TextMessage(models.Model):
     text = models.TextField("Текст", max_length=500)
 
+
     class Meta:
         verbose_name = "Текстовое сообщение"
         verbose_name_plural = "Текстовые сообщения"
