@@ -136,14 +136,6 @@ class BitSerializer(serializers.ModelSerializer):
 
 
 class TextMessageSerializer(serializers.ModelSerializer):
-    text = serializers.SerializerMethodField()
-
     class Meta:
         model = TextMessage
         fields = ['id', 'text']
-
-    def get_text(self, obj):
-        return {
-            'ru': obj.text_ru,
-            'ky': obj.text_ky
-        }
