@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -116,7 +117,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru'
 
-
+LANGUAGES = (
+    ('ru', 'Русский'),
+    ('ky', 'Кыргызча'),
+)
 
 TIME_ZONE = 'Asia/Bishkek'
 
@@ -172,3 +176,4 @@ CORS_ALLOW_ALL_ORIGINS = True  # ⚠️ Не для продакшена!
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'authorization',
 ]
+
