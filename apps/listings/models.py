@@ -72,6 +72,8 @@ class Listing(models.Model):
     purpose = models.CharField("Назначение", max_length=100, blank=True, null=True)
     parking = models.BooleanField("Парковка", default=False)
     document = models.CharField("Документ",max_length=255, blank=True, null=True)
+    series = models.CharField("Серия", max_length=255, blank=True, null=True)
+
 
 
     class Meta:
