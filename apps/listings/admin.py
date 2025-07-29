@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import Listing, ListingImage, Location, Application, SingleField, Bit, TextMessage, SingleImage, ListingImage
+from modeltranslation.admin import TranslationAdmin, TranslationTabularInline
+from apps.listings.translation import *
 
 
 @admin.register(Location)
@@ -60,9 +62,20 @@ class BitAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
 
 @admin.register(TextMessage)
-class TextMessageAdmin(admin.ModelAdmin):
+class TextMessageAdmin(TranslationAdmin):
+    fieldsets = (
+        ('Основное', {
+            'fields': ('text',),
+        }),
+        ('Русская версия', {
+            'fields': ('text_ru',),
+        }),
+        ('Кыргызская версия', {
+            'fields': ('text_ky',),
+        }),
+    )
     list_display = ('text',)
-    search_fields = ('text',)
+    search_fields = ('text', 'text_ru', 'text_ky')
 
 @admin.register(SingleImage)
 class SingleImageAdmin(admin.ModelAdmin):

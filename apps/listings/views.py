@@ -328,11 +328,17 @@ def admin_stats(request):
     return Response(data)
 
 # ─── Текст ───────────────────────────
+from django.http import HttpResponseNotAllowed
+
 class TextMessageView(generics.GenericAPIView):
     queryset = TextMessage.objects.all()
     serializer_class = TextMessageSerializer
     permission_classes = [AllowAny]
-    lookup_field = None
+    lookup_field = 'pk'
+
+    def options(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_200_OK)
+
 
     def get(self, request, *args, **kwargs):
         messages = self.get_queryset()
@@ -358,11 +364,9 @@ class TextMessageView(generics.GenericAPIView):
         serializer.save()
         return Response(serializer.data)
 
-    def delete(self, request, *args, **kwargs):
-        pk = kwargs.get("pk")
+    def delete(self, request, pk=None, *args, **kwargs):
         if pk is None:
             return Response({"detail": "ID is required for deletion."}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             message = TextMessage.objects.get(pk=pk)
         except TextMessage.DoesNotExist:

@@ -138,4 +138,4 @@ class BitSerializer(serializers.ModelSerializer):
 class TextMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = TextMessage
-        fields = ['id', 'text']
+        fields = ['id', 'text_ru', 'text_ky']
