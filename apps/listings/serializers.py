@@ -49,6 +49,8 @@ class ListingSerializer(serializers.ModelSerializer):
             required=False,
             allow_null=True
         )
+        series = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
 
 
@@ -69,7 +71,8 @@ class ListingSerializer(serializers.ModelSerializer):
                 'utilities', 'purpose', 'parking', 'property_type',
                 'location', 'location_id', 'address', 'deal_type',
                 'is_active', 'created_at', 'likes_count',
-                'images', 'media', 'media_files', 'document', "single_field"
+                'images', 'media', 'media_files', 'document', "single_field",
+                'series'
             ]
 
         def create(self, validated_data):

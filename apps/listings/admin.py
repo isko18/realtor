@@ -18,7 +18,7 @@ class ListingImageInline(admin.TabularInline):
 class ListingAdmin(admin.ModelAdmin):
     list_display = (
         'title', 'owner', 'deal_type', 'property_type', 'price',
-        'likes_count', 'is_active', 'created_at', 'floor', 'land_area', 'parking'
+        'likes_count', 'is_active', 'created_at', 'floor', 'land_area', 'parking', 'series'
     )
     list_filter = (
         'deal_type', 'property_type', 'is_active', 'location__city',
