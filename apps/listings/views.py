@@ -20,9 +20,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework.permissions import AllowAny
+from django.shortcuts import render
 
 
-# ─── Права ───────────────────────────────────────────────
+def index(request):
+    return render(request, 'index.html')
+
 class IsRealtor(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'realtor'
@@ -89,6 +92,23 @@ class ListingListCreateView(generics.ListCreateAPIView):
             except Listing.DoesNotExist:
                 continue
         return Response({"message": f"Обновлено {updated_count} объявлений"}, status=status.HTTP_200_OK)
+
+
+    def delete(self, request, *args, **kwargs):
+            data = request.data
+            if not isinstance(data, list):
+                return Response({"detail": "Ожидается список ID объявлений"}, status=status.HTTP_400_BAD_REQUEST)
+
+            deleted_count = 0
+            for item_id in data:
+                try:
+                    listing = Listing.objects.get(id=item_id)
+                    if self.request.user == listing.owner or self.request.user.role == 'admin':
+                        listing.delete()
+                        deleted_count += 1
+                except Listing.DoesNotExist:
+                    continue
+            return Response({"message": f"Удалено {deleted_count} объявлений"}, status=status.HTTP_200_OK)
 
 
 class ListingRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

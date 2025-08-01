@@ -6,6 +6,8 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from apps.listings.views import index
+
 
 # drf-yasg: схема и контактная информация
 schema_view = get_schema_view(
@@ -34,13 +36,32 @@ api_urlpatterns = [
 
 # Общие URL'ы
 urlpatterns = [
+    path('', index, name='index'),
+    path('favorites/', index, name='index'),
+    path('login/', index, name='index'),
+    path('dashboard/profile/', index, name='index'),
+    path('dashboard/announcements/', index, name='index'),
+    path('dashboard/create-listing/', index, name='index'),
+    path('dashboard/single/', index, name='index'),
+    path('dashboard/bit/', index, name='index'),
+    path('dashboard/agent/', index, name='index'),
+    path('dashboard/locations/', index, name='index'),
+    path('dashboard/texteditor/', index, name='index'),
+    path('dashboard/register/', index, name='index'),
+    path('dashboard/image-admin/', index, name='index'),
+
+
+
+
+
+
     path('admin/', admin.site.urls),
 
     # API
     path('api/', include(api_urlpatterns)),
 
     # Документация Swagger и Redoc от drf-yasg
-    path('', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 

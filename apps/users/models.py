@@ -8,6 +8,8 @@ class User(AbstractUser):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
     phone = models.CharField(max_length=20, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True) 
+
 
     REQUIRED_FIELDS = ['email', 'role']
 
