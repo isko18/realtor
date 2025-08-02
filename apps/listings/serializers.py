@@ -79,13 +79,12 @@ class ListingSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         media_files = validated_data.pop('media_files', [])
-        user = self.context['request'].user
-        listing = Listing.objects.create(owner=user, **validated_data)
+        listing = Listing.objects.create(**validated_data)  # ← УДАЛЁН owner=user
         for file in media_files:
             if file.content_type.startswith("image/"):
                 ListingImage.objects.create(listing=listing, image=file)
         return listing
-
+    
     def update(self, instance, validated_data):
         media_files = validated_data.pop('media_files', [])
         for key, value in validated_data.items():

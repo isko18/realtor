@@ -67,3 +67,10 @@ class ManagerCreationSerializer(serializers.ModelSerializer):
         user.is_staff = False
         user.save()
         return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'role', 'avatar']
+        read_only_fields = ['id', 'username'] 

@@ -75,7 +75,8 @@ class ListingListCreateView(generics.ListCreateAPIView):
         return Listing.objects.filter(is_active=True)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(owner=self.request.user)  # ← это ОСТАВИТЬ
+
 
     def put(self, request, *args, **kwargs):
         data = request.data
