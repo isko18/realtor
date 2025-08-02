@@ -49,6 +49,9 @@ urlpatterns = [
     path('dashboard/texteditor/', index, name='index'),
     path('dashboard/register/', index, name='index'),
     path('dashboard/image-admin/', index, name='index'),
+    path('dashboard/listing-manager/', index, name='index'),
+    path('dashboard/employee/', index, name='index'),
+    
 
 
 
